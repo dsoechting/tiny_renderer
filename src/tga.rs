@@ -1,3 +1,4 @@
+// Credit here: https://github.com/phinjensen/rustyrender/blob/lesson-0/src/tga.rs
 use std::io::{BufWriter, prelude::*};
 use std::u8;
 use std::{fs::File, io};
