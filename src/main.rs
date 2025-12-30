@@ -50,13 +50,15 @@ fn main() {
     let point3 = Point { x: 62, y: 53 };
 
     let mut img = Image::new(width, height);
-    img.set(point1.x, point1.y, WHITE);
-    img.set(point2.x, point2.y, WHITE);
-    img.set(point3.x, point3.y, WHITE);
+
+    // Triangle
     draw_line(&point1, &point2, &mut img, BLUE);
     draw_line(&point3, &point2, &mut img, GREEN);
     draw_line(&point3, &point1, &mut img, YELLOW);
     draw_line(&point1, &point3, &mut img, RED);
+    img.set(point1.x, point1.y, WHITE);
+    img.set(point2.x, point2.y, WHITE);
+    img.set(point3.x, point3.y, WHITE);
     img.write_to_file("output.tga", true, true);
 }
 fn draw_line(point_one: &Point, point_two: &Point, img: &mut Image<RGBA>, color: RGBA) {
