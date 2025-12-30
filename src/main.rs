@@ -60,12 +60,14 @@ fn main() {
     img.write_to_file("output.tga", true, true);
 }
 fn draw_line(origin: &Point, destination: &Point, img: &mut Image<RGBA>, color: RGBA) {
+    let min_x = origin.x.min(destination.x);
+    let max_x = origin.x.max(destination.x);
     let origin_x = origin.x as f64;
     let origin_y = origin.y as f64;
     let dest_x = destination.x as f64;
     let dest_y = destination.y as f64;
 
-    for x in origin.x..destination.x {
+    for x in min_x..=max_x {
         dbg!(x, origin.x, destination.x);
         //54/
         let t = ((x as f64) - origin_x) / (dest_x - origin_x);
