@@ -3,8 +3,14 @@ use crate::{
     tga::{Image, RGBA},
     types::Point,
 };
+use anyhow::Result;
 
-pub fn draw_line(point_one: &Point, point_two: &Point, img: &mut Image<RGBA>, color: Color) {
+pub fn draw_line(
+    point_one: &Point,
+    point_two: &Point,
+    img: &mut Image<RGBA>,
+    color: Color,
+) -> Result<()> {
     let delta_x = point_one.x.abs_diff(point_two.x);
     let delta_y = point_one.y.abs_diff(point_two.y);
     let steep = delta_y > delta_x;
@@ -14,6 +20,8 @@ pub fn draw_line(point_one: &Point, point_two: &Point, img: &mut Image<RGBA>, co
     let point_one_y: f64;
     let point_two_x: f64;
     let point_two_y: f64;
+    // If delta_y is greater than delta_x, flipping X and Y
+    // Then we transpose it back at the very end.
     if steep {
         min_x = point_one.y.min(point_two.y);
         max_x = point_one.y.max(point_two.y);
@@ -34,9 +42,10 @@ pub fn draw_line(point_one: &Point, point_two: &Point, img: &mut Image<RGBA>, co
         let t = (x as f64 - point_one_x) / (point_two_x - point_one_x);
         let line_y = (point_one_y + t * (point_two_y - point_one_y)) as usize;
         if steep {
-            img.set(line_y, x, color.rgba_value()).unwrap();
+            img.set(line_y, x, color.rgba_value())?;
         } else {
-            img.set(x, line_y, color.rgba_value()).unwrap();
+            img.set(x, line_y, color.rgba_value())?;
         }
     }
+    Ok(())
 }
