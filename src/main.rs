@@ -36,9 +36,9 @@ fn test_triangles() {
     let point_g = Point { x: 115, y: 83 };
     let point_h = Point { x: 80, y: 90 };
     let point_i = Point { x: 85, y: 120 };
-    draw_triangle(point_a, point_b, point_c, &mut img, Color::Red);
-    draw_triangle(point_d, point_e, point_f, &mut img, Color::White);
-    draw_triangle(point_g, point_h, point_i, &mut img, Color::Green);
+    draw_triangle(&point_a, &point_b, &point_c, &mut img, Color::Red);
+    draw_triangle(&point_d, &point_e, &point_f, &mut img, Color::White);
+    draw_triangle(&point_g, &point_h, &point_i, &mut img, Color::Green);
 
     img.write_to_file("triangles.tga", true, true);
 }
@@ -47,7 +47,6 @@ fn test_obj_files() {
     let head_path = Path::new("./assets/head.obj");
     let body_path = Path::new("./assets/body.obj");
     let diablo_path = Path::new("./assets/diablo.obj");
-    let bear_path = Path::new("./assets/bear.obj");
     let path = diablo_path;
 
     let width: usize = 1600;
@@ -55,8 +54,14 @@ fn test_obj_files() {
     let mut img = Image::new(width, height);
 
     if let Ok(diablo_model) = parse_obj_file(path) {
-        draw_obj_file(diablo_model, &mut img);
-    }
-
-    img.write_to_file("model.tga", true, true);
+        let draw_res = draw_obj_file(diablo_model, &mut img);
+        match draw_res {
+            Ok(_) => {
+                img.write_to_file("model.tga", true, true);
+            }
+            Err(e) => {
+                eprintln!("Failed to render obj object: {:?}", e);
+            }
+        };
+    };
 }

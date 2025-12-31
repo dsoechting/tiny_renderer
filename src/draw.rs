@@ -17,39 +17,37 @@ pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            let point1 = Point {
+            let point_a = Point {
                 x: (((vertex_one.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
                 y: (((vertex_one.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
 
-            let point2 = Point {
+            let point_b = Point {
                 x: (((vertex_two.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
                 y: (((vertex_two.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
 
-            let point3 = Point {
+            let point_c = Point {
                 x: (((vertex_three.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
                 y: (((vertex_three.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
-            draw_line(&point1, &point2, img, &Color::Red)?;
-            draw_line(&point1, &point3, img, &Color::Red)?;
-            draw_line(&point3, &point2, img, &Color::Red)?;
+            draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
         }
     }
     Ok(())
 }
 
 pub fn draw_triangle(
-    point_a: Point,
-    point_b: Point,
-    point_c: Point,
+    point_a: &Point,
+    point_b: &Point,
+    point_c: &Point,
     img: &mut Image<RGBA>,
     color: Color,
 ) -> Result<()> {
     // Triangle
-    draw_line(&point_a, &point_b, img, &color)?;
-    draw_line(&point_c, &point_b, img, &color)?;
-    draw_line(&point_a, &point_c, img, &color)?;
+    draw_line(point_a, point_b, img, &color)?;
+    draw_line(point_c, point_b, img, &color)?;
+    draw_line(point_a, point_c, img, &color)?;
     Ok(())
 }
 
