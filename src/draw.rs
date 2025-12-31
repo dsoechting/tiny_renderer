@@ -7,8 +7,8 @@ use crate::{
 use anyhow::Result;
 
 pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
-    let width: usize = 1600;
-    let height: usize = 1600;
+    let width = img.width;
+    let height = img.height;
     let verticies = obj.verticies;
     let faces = obj.faces;
     for face in faces {
@@ -18,25 +18,24 @@ pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
             verticies.get(face.three - 1),
         ) {
             let point1 = Point {
-                x: ((vertex_one.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_one.y + 1.0) * 0.5 * height as f64) as usize,
+                x: (((vertex_one.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
+                y: (((vertex_one.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
 
             let point2 = Point {
-                x: ((vertex_two.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_two.y + 1.0) * 0.5 * height as f64) as usize,
+                x: (((vertex_two.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
+                y: (((vertex_two.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
 
             let point3 = Point {
-                x: ((vertex_three.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_three.y + 1.0) * 0.5 * height as f64) as usize,
+                x: (((vertex_three.x + 1.0) * 0.5 * width as f64) as usize).min(width - 1),
+                y: (((vertex_three.y + 1.0) * 0.5 * height as f64) as usize).min(width - 1),
             };
             draw_line(&point1, &point2, img, &Color::Red)?;
             draw_line(&point1, &point3, img, &Color::Red)?;
             draw_line(&point3, &point2, img, &Color::Red)?;
         }
     }
-    // img.write_to_file("model.tga", true, true)?;
     Ok(())
 }
 

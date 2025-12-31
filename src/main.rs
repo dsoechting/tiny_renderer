@@ -11,9 +11,8 @@ use tiny_renderer::{
 
 fn main() {
     let start = Instant::now();
-    // draw_triangle().unwrap();
     test_obj_files();
-    // test_triangles();
+    test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
 }
