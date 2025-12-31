@@ -1,5 +1,5 @@
 pub mod colors;
-pub mod line;
+pub mod draw;
 pub mod obj;
 pub mod tga;
 pub mod types;

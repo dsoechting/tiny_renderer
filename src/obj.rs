@@ -1,3 +1,4 @@
+use crate::types::{Face, Vector3};
 use anyhow::Result;
 
 use std::{
@@ -5,27 +6,10 @@ use std::{
     path::Path,
 };
 
-#[derive(Debug)]
-struct Vector3 {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-// Indexes of verticies
-// Hard coding three ints. Will likely change down the line
-// Just need to parse an obj file for now
-#[derive(Debug)]
-struct Face {
-    one: u64,
-    two: u64,
-    three: u64,
-}
-
 #[derive(Default)]
 pub struct ObjFile {
-    verticies: Vec<Vector3>,
-    faces: Vec<Face>,
+    pub verticies: Vec<Vector3>,
+    pub faces: Vec<Face>,
 }
 
 fn parse_vertex(str: &str) -> Option<Vector3> {
@@ -57,9 +41,9 @@ fn parse_face(str: &str) -> Option<Face> {
             three_chunk_str.split_once('/'),
         )
         && let (Ok(one), Ok(two), Ok(three)) = (
-            one_str.parse::<u64>(),
-            two_str.parse::<u64>(),
-            three_str.parse::<u64>(),
+            one_str.parse::<usize>(),
+            two_str.parse::<usize>(),
+            three_str.parse::<usize>(),
         )
     {
         return Some(Face { one, two, three });

@@ -2,14 +2,25 @@ use std::{path::Path, time::Instant};
 
 use anyhow::Result;
 use tiny_renderer::{
-    colors::Color, line::draw_line, obj::parse_obj_file, tga::Image, types::Point,
+    colors::Color,
+    draw::{draw_line, draw_obj_file},
+    obj::{ObjFile, parse_obj_file},
+    tga::Image,
+    types::Point,
 };
 
 fn main() {
     // draw_triangle().unwrap();
     let start = Instant::now();
-    let path = Path::new("./assets/diablo.obj");
-    let _ = parse_obj_file(path);
+    let head_path = Path::new("./assets/head.obj");
+    let body_path = Path::new("./assets/body.obj");
+    let diablo_path = Path::new("./assets/diablo.obj");
+    let bear_path = Path::new("./assets/bear.obj");
+    let path = bear_path;
+
+    if let Ok(diablo_model) = parse_obj_file(path) {
+        draw_obj_file(diablo_model);
+    }
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
 }
