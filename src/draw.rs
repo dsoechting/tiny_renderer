@@ -6,10 +6,9 @@ use crate::{
 };
 use anyhow::Result;
 
-pub fn draw_obj_file(obj: ObjFile) -> Result<()> {
+pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
     let width: usize = 1600;
     let height: usize = 1600;
-    let mut img = Image::new(width, height);
     let verticies = obj.verticies;
     let faces = obj.faces;
     for face in faces {
@@ -18,7 +17,6 @@ pub fn draw_obj_file(obj: ObjFile) -> Result<()> {
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            // dbg!(&vertex_one, &vertex_two, &vertex_three);
             let point1 = Point {
                 x: ((vertex_one.x + 1.0) * 0.5 * width as f64) as usize,
                 y: ((vertex_one.y + 1.0) * 0.5 * height as f64) as usize,
@@ -33,21 +31,34 @@ pub fn draw_obj_file(obj: ObjFile) -> Result<()> {
                 x: ((vertex_three.x + 1.0) * 0.5 * width as f64) as usize,
                 y: ((vertex_three.y + 1.0) * 0.5 * height as f64) as usize,
             };
-            // dbg!(&point1, &point2, &point3);
-            draw_line(&point1, &point2, &mut img, Color::Red);
-            draw_line(&point1, &point3, &mut img, Color::Red);
-            draw_line(&point3, &point2, &mut img, Color::Red);
+            draw_line(&point1, &point2, img, &Color::Red)?;
+            draw_line(&point1, &point3, img, &Color::Red)?;
+            draw_line(&point3, &point2, img, &Color::Red)?;
         }
     }
-    img.write_to_file("model.tga", true, true)?;
+    // img.write_to_file("model.tga", true, true)?;
     Ok(())
 }
 
-pub fn draw_line(
+pub fn draw_triangle(
+    point_a: Point,
+    point_b: Point,
+    point_c: Point,
+    img: &mut Image<RGBA>,
+    color: Color,
+) -> Result<()> {
+    // Triangle
+    draw_line(&point_a, &point_b, img, &color)?;
+    draw_line(&point_c, &point_b, img, &color)?;
+    draw_line(&point_a, &point_c, img, &color)?;
+    Ok(())
+}
+
+fn draw_line(
     point_one: &Point,
     point_two: &Point,
     img: &mut Image<RGBA>,
-    color: Color,
+    color: &Color,
 ) -> Result<()> {
     let delta_x = point_one.x.abs_diff(point_two.x);
     let delta_y = point_one.y.abs_diff(point_two.y);
@@ -85,7 +96,5 @@ pub fn draw_line(
             img.set(x, line_y, color.rgba_value())?;
         }
     }
-    img.set(point_one.x, point_one.y, Color::White.rgba_value())?;
-    img.set(point_two.x, point_two.y, Color::White.rgba_value())?;
     Ok(())
 }
