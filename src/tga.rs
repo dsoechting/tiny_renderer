@@ -1,4 +1,6 @@
 // Credit here: https://github.com/phinjensen/rustyrender/blob/lesson-0/src/tga.rs
+use anyhow::Result;
+use anyhow::anyhow;
 use std::io::{BufWriter, prelude::*};
 use std::u8;
 use std::{fs::File, io};
@@ -92,9 +94,9 @@ impl<T: ColorSpace + Copy> Image<T> {
         }
     }
 
-    pub fn set(&mut self, x: usize, y: usize, color: T) -> Result<(), String> {
+    pub fn set(&mut self, x: usize, y: usize, color: T) -> Result<()> {
         if x >= self.width || y >= self.height {
-            return Err(String::from("Coordinates out of bounds for image"));
+            return Err(anyhow!("Coordinates out of bounds for image"));
         }
         self.data[x + y * self.width] = color;
         Ok(())
@@ -149,7 +151,7 @@ impl<T: ColorSpace + Copy> Image<T> {
         Ok(())
     }
 
-    pub fn write_to_file(&self, filename: &str, vflip: bool, rle: bool) -> io::Result<()> {
+    pub fn write_to_file(&self, filename: &str, vflip: bool, rle: bool) -> Result<()> {
         let mut out = BufWriter::new(
             File::options()
                 .write(true)
