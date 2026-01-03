@@ -11,7 +11,7 @@ use tiny_renderer::{
 
 fn main() {
     let start = Instant::now();
-    test_obj_files();
+    // test_obj_files();
     test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
@@ -55,6 +55,7 @@ fn test_obj_files() {
 
     if let Ok(diablo_model) = parse_obj_file(path) {
         let draw_res = draw_obj_file(diablo_model, &mut img);
+
         match draw_res {
             Ok(_) => {
                 img.write_to_file("model.tga", true, true);
