@@ -34,6 +34,10 @@ impl Triangle {
         let bb_max_y = self.point_a.y.max(self.point_b.y).max(self.point_c.y);
 
         let total_area = self.area();
+        // z index hack
+        if total_area < 1.0 {
+            return Ok(());
+        }
 
         // Figure out how to do this in parallel
         // Will probably need to adjust the Image module

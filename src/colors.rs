@@ -35,6 +35,7 @@ const YELLOW: RGBA = RGBA {
     a: 255,
 };
 
+#[derive(Debug, Copy, Clone)]
 pub enum Color {
     White,
     Red,

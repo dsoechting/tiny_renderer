@@ -6,6 +6,7 @@ use crate::{
     types::Point,
 };
 use anyhow::Result;
+use rand::{seq::IndexedRandom, thread_rng};
 
 pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
     let width = img.width;
@@ -41,7 +42,18 @@ pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
                 point_b,
                 point_c,
             };
-            triangle.draw(Color::Red, img)?;
+            let mut rng = thread_rng();
+
+            let color = *[
+                Color::White,
+                Color::Red,
+                Color::Green,
+                Color::Blue,
+                Color::Yellow,
+            ]
+            .choose(&mut rng)
+            .unwrap();
+            triangle.draw(color, img)?;
             // draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
         }
     }
