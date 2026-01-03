@@ -2,6 +2,7 @@ use crate::{
     colors::Color,
     obj::ObjFile,
     tga::{Image, RGBA},
+    triangle::Triangle,
     types::Point,
 };
 use anyhow::Result;
@@ -35,66 +36,41 @@ pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
                 y: (((vertex_three.y + 1.0) * 0.5 * height as f64) as isize)
                     .min((width - 1) as isize),
             };
-            draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
+            let triangle = Triangle {
+                point_a,
+                point_b,
+                point_c,
+            };
+            triangle.draw(Color::Red, img)?;
+            // draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
         }
     }
     Ok(())
 }
 
-pub fn draw_triangle(
-    point_a: &Point,
-    point_b: &Point,
-    point_c: &Point,
-    img: &mut Image<RGBA>,
-    color: Color,
-) -> Result<()> {
-    // Triangle
-    let mut points = [point_a, point_b, point_c];
-    points.sort_by_key(|p| p.y);
-    let low_point = points.first().unwrap();
-    let med_point = points.get(1).unwrap();
-    let high_point = points.last().unwrap();
-    let total_height = high_point.y - low_point.y;
-
-    // Bottom half of triangle
-    if low_point.y != med_point.y {
-        let segment_height = med_point.y - low_point.y;
-        for y in low_point.y..=med_point.y {
-            let y_unsigned = usize::try_from(y)?;
-
-            let x1_signed: isize =
-                low_point.x + ((high_point.x - low_point.x) * (y - low_point.y)) / total_height;
-            let x2_signed: isize =
-                low_point.x + ((med_point.x - low_point.x) * (y - low_point.y)) / segment_height;
-            let x_min_unsigned = usize::try_from(x1_signed.min(x2_signed))?;
-            let x_max_unsigned = usize::try_from(x1_signed.max(x2_signed))?;
-
-            for x in x_min_unsigned..=x_max_unsigned {
-                img.set(x, y_unsigned, color.rgba_value())?;
-            }
-        }
-    }
-
-    if med_point.y != high_point.y {
-        let segment_height = high_point.y - med_point.y;
-        for y in med_point.y..=high_point.y {
-            let y_unsigned = usize::try_from(y)?;
-
-            let x1_signed: isize =
-                low_point.x + ((high_point.x - low_point.x) * (y - low_point.y)) / total_height;
-            let x2_signed =
-                med_point.x + ((high_point.x - med_point.x) * (y - med_point.y)) / segment_height;
-
-            let x_min_unsigned = usize::try_from(x1_signed.min(x2_signed))?;
-            let x_max_unsigned = usize::try_from(x1_signed.max(x2_signed))?;
-
-            for x in x_min_unsigned..=x_max_unsigned {
-                img.set(x, y_unsigned, color.rgba_value())?;
-            }
-        }
-    }
-    Ok(())
-}
+// pub fn draw_triangle(
+//     point_a: &Point,
+//     point_b: &Point,
+//     point_c: &Point,
+//     img: &mut Image<RGBA>,
+//     color: Color,
+// ) -> Result<()> {
+//     let bb_min_x = point_a.x.min(point_b.x).min(point_c.x);
+//     let bb_max_x = point_a.x.max(point_b.x).max(point_c.x);
+//     let bb_min_y = point_a.y.min(point_b.y).min(point_c.y);
+//     let bb_max_y = point_a.y.max(point_b.y).max(point_c.y);
+//
+//     // Figure out how to do this in parallel
+//     // Will probably need to adjust the Image module
+//     for y in bb_min_y..=bb_max_y {
+//         for x in bb_min_x..=bb_max_x {
+//             let x_unsigned = usize::try_from(x)?;
+//             let y_unsigned = usize::try_from(y)?;
+//             img.set(x_unsigned, y_unsigned, color.rgba_value())?;
+//         }
+//     }
+//     Ok(())
+// }
 
 fn draw_line(
     point_one: &Point,

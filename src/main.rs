@@ -3,15 +3,16 @@ use std::{path::Path, time::Instant};
 use anyhow::Result;
 use tiny_renderer::{
     colors::Color,
-    draw::{draw_obj_file, draw_triangle},
+    draw::draw_obj_file,
     obj::{ObjFile, parse_obj_file},
     tga::Image,
+    triangle::Triangle,
     types::Point,
 };
 
 fn main() {
     let start = Instant::now();
-    // test_obj_files();
+    test_obj_files();
     test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
@@ -26,19 +27,34 @@ fn test_triangles() {
     let point_a = Point { x: 7, y: 45 };
     let point_b = Point { x: 35, y: 100 };
     let point_c = Point { x: 45, y: 60 };
+    let triangle_1 = Triangle {
+        point_a,
+        point_b,
+        point_c,
+    };
 
     // Triangle 2
     let point_d = Point { x: 120, y: 35 };
     let point_e = Point { x: 90, y: 5 };
     let point_f = Point { x: 45, y: 110 };
+    let triangle_2 = Triangle {
+        point_a: point_d,
+        point_b: point_e,
+        point_c: point_f,
+    };
 
     // Triangle 3
     let point_g = Point { x: 115, y: 83 };
     let point_h = Point { x: 80, y: 90 };
     let point_i = Point { x: 85, y: 120 };
-    draw_triangle(&point_a, &point_b, &point_c, &mut img, Color::Red);
-    draw_triangle(&point_d, &point_e, &point_f, &mut img, Color::White);
-    draw_triangle(&point_g, &point_h, &point_i, &mut img, Color::Green);
+    let triangle_3 = Triangle {
+        point_a: point_g,
+        point_b: point_h,
+        point_c: point_i,
+    };
+    triangle_1.draw(Color::Red, &mut img);
+    triangle_2.draw(Color::White, &mut img);
+    triangle_3.draw(Color::Green, &mut img);
 
     img.write_to_file("triangles.tga", true, true);
 }
