@@ -57,8 +57,8 @@ impl ColorSpace for RGBA {
 }
 
 pub struct Image<T: ColorSpace> {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     data: Vec<T>,
 }
 

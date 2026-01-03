@@ -2,14 +2,15 @@ use crate::{
     colors::Color,
     obj::ObjFile,
     tga::{Image, RGBA},
+    triangle::Triangle,
     types::Point,
 };
 use anyhow::Result;
+use rand::{seq::IndexedRandom, thread_rng};
 
-pub fn draw_obj_file(obj: ObjFile) -> Result<()> {
-    let width: usize = 1600;
-    let height: usize = 1600;
-    let mut img = Image::new(width, height);
+pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
+    let width = img.width;
+    let height = img.height;
     let verticies = obj.verticies;
     let faces = obj.faces;
     for face in faces {
@@ -18,42 +19,82 @@ pub fn draw_obj_file(obj: ObjFile) -> Result<()> {
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            // dbg!(&vertex_one, &vertex_two, &vertex_three);
-            let point1 = Point {
-                x: ((vertex_one.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_one.y + 1.0) * 0.5 * height as f64) as usize,
+            let point_a = Point {
+                x: (((vertex_one.x + 1.0) * 0.5 * width as f64) as isize).min((width - 1) as isize),
+                y: (((vertex_one.y + 1.0) * 0.5 * height as f64) as isize)
+                    .min((width - 1) as isize),
             };
 
-            let point2 = Point {
-                x: ((vertex_two.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_two.y + 1.0) * 0.5 * height as f64) as usize,
+            let point_b = Point {
+                x: (((vertex_two.x + 1.0) * 0.5 * width as f64) as isize).min((width - 1) as isize),
+                y: (((vertex_two.y + 1.0) * 0.5 * height as f64) as isize)
+                    .min((width - 1) as isize),
             };
 
-            let point3 = Point {
-                x: ((vertex_three.x + 1.0) * 0.5 * width as f64) as usize,
-                y: ((vertex_three.y + 1.0) * 0.5 * height as f64) as usize,
+            let point_c = Point {
+                x: (((vertex_three.x + 1.0) * 0.5 * width as f64) as isize)
+                    .min((width - 1) as isize),
+                y: (((vertex_three.y + 1.0) * 0.5 * height as f64) as isize)
+                    .min((width - 1) as isize),
             };
-            // dbg!(&point1, &point2, &point3);
-            draw_line(&point1, &point2, &mut img, Color::Red);
-            draw_line(&point1, &point3, &mut img, Color::Red);
-            draw_line(&point3, &point2, &mut img, Color::Red);
+            let triangle = Triangle {
+                point_a,
+                point_b,
+                point_c,
+            };
+            let mut rng = thread_rng();
+
+            let color = *[
+                Color::White,
+                Color::Red,
+                Color::Green,
+                Color::Blue,
+                Color::Yellow,
+            ]
+            .choose(&mut rng)
+            .unwrap();
+            triangle.draw(color, img)?;
+            // draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
         }
     }
-    img.write_to_file("model.tga", true, true)?;
     Ok(())
 }
 
-pub fn draw_line(
+// pub fn draw_triangle(
+//     point_a: &Point,
+//     point_b: &Point,
+//     point_c: &Point,
+//     img: &mut Image<RGBA>,
+//     color: Color,
+// ) -> Result<()> {
+//     let bb_min_x = point_a.x.min(point_b.x).min(point_c.x);
+//     let bb_max_x = point_a.x.max(point_b.x).max(point_c.x);
+//     let bb_min_y = point_a.y.min(point_b.y).min(point_c.y);
+//     let bb_max_y = point_a.y.max(point_b.y).max(point_c.y);
+//
+//     // Figure out how to do this in parallel
+//     // Will probably need to adjust the Image module
+//     for y in bb_min_y..=bb_max_y {
+//         for x in bb_min_x..=bb_max_x {
+//             let x_unsigned = usize::try_from(x)?;
+//             let y_unsigned = usize::try_from(y)?;
+//             img.set(x_unsigned, y_unsigned, color.rgba_value())?;
+//         }
+//     }
+//     Ok(())
+// }
+
+fn draw_line(
     point_one: &Point,
     point_two: &Point,
     img: &mut Image<RGBA>,
-    color: Color,
+    color: &Color,
 ) -> Result<()> {
     let delta_x = point_one.x.abs_diff(point_two.x);
     let delta_y = point_one.y.abs_diff(point_two.y);
     let steep = delta_y > delta_x;
-    let min_x: usize;
-    let max_x: usize;
+    let min_x: isize;
+    let max_x: isize;
     let point_one_x: f64;
     let point_one_y: f64;
     let point_two_x: f64;
@@ -79,13 +120,12 @@ pub fn draw_line(
     for x in min_x..=max_x {
         let t = (x as f64 - point_one_x) / (point_two_x - point_one_x);
         let line_y = (point_one_y + t * (point_two_y - point_one_y)) as usize;
+        let x_usize = usize::try_from(x)?;
         if steep {
-            img.set(line_y, x, color.rgba_value())?;
+            img.set(line_y, x_usize, color.rgba_value())?;
         } else {
-            img.set(x, line_y, color.rgba_value())?;
+            img.set(x_usize, line_y, color.rgba_value())?;
         }
     }
-    img.set(point_one.x, point_one.y, Color::White.rgba_value())?;
-    img.set(point_two.x, point_two.y, Color::White.rgba_value())?;
     Ok(())
 }
