@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::Result;
 
-pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
+pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
     let width = img.width;
     let height = img.height;
     let verticies = obj.verticies;
@@ -42,7 +42,10 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
                 point_c,
             };
 
-            // triangle.draw::<T>(T::random(), img)?;
+            // z index hack
+            if triangle.area() > 1.0 {
+                triangle.draw::<RGBA>(Color::Red.rgba_value(), img)?;
+            }
         }
     }
     Ok(())

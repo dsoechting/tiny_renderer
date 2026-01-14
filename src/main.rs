@@ -12,7 +12,7 @@ use tiny_renderer::{
 
 fn main() {
     let start = Instant::now();
-    // test_obj_files();
+    test_obj_files();
     test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
@@ -21,7 +21,7 @@ fn main() {
 fn test_triangles() {
     let width: usize = 128;
     let height: usize = 128;
-    let mut img = Image::<RGB>::new(width, height);
+    let mut img = Image::<RGBA>::new(width, height);
 
     // Trianlge 1
     let point_a = Point { x: 7, y: 45 };
@@ -74,7 +74,7 @@ fn test_obj_files() {
 
         match draw_res {
             Ok(_) => {
-                img.write_to_file("model.tga", true, true);
+                img.write_to_file("model.tga", true, false);
             }
             Err(e) => {
                 eprintln!("Failed to render obj object: {:?}", e);
