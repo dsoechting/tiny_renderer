@@ -5,14 +5,14 @@ use tiny_renderer::{
     colors::Color,
     draw::draw_obj_file,
     obj::{ObjFile, parse_obj_file},
-    tga::Image,
+    tga::{Grayscale, Image, RGB, RGBA},
     triangle::Triangle,
     types::Point,
 };
 
 fn main() {
     let start = Instant::now();
-    test_obj_files();
+    // test_obj_files();
     test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
@@ -21,7 +21,7 @@ fn main() {
 fn test_triangles() {
     let width: usize = 128;
     let height: usize = 128;
-    let mut img = Image::new(width, height);
+    let mut img = Image::<RGB>::new(width, height);
 
     // Trianlge 1
     let point_a = Point { x: 7, y: 45 };
@@ -52,9 +52,9 @@ fn test_triangles() {
         point_b: point_h,
         point_c: point_i,
     };
-    triangle_1.draw(Color::Red, &mut img);
-    triangle_2.draw(Color::White, &mut img);
-    triangle_3.draw(Color::Green, &mut img);
+    triangle_1.draw(Color::Red.rgba_value(), &mut img);
+    triangle_2.draw(Color::White.rgba_value(), &mut img);
+    triangle_3.draw(Color::Green.rgba_value(), &mut img);
 
     img.write_to_file("triangles.tga", true, true);
 }
@@ -67,7 +67,7 @@ fn test_obj_files() {
 
     let width: usize = 1600;
     let height: usize = 1600;
-    let mut img = Image::new(width, height);
+    let mut img = Image::<RGBA>::new(width, height);
 
     if let Ok(diablo_model) = parse_obj_file(path) {
         let draw_res = draw_obj_file(diablo_model, &mut img);

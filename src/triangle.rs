@@ -1,6 +1,5 @@
 use crate::{
-    colors::Color,
-    tga::{Image, RGBA},
+    tga::{ColorSpace, Grayscale, Image, RGB},
     types::Point,
 };
 use anyhow::Result;
@@ -27,7 +26,7 @@ impl Triangle {
             as f64
     }
 
-    pub fn draw(&self, color: Color, img: &mut Image<RGBA>) -> Result<()> {
+    pub fn draw<T: ColorSpace + Copy>(&self, color: T, img: &mut Image<RGB>) -> Result<()> {
         let bb_min_x = self.point_a.x.min(self.point_b.x).min(self.point_c.x);
         let bb_max_x = self.point_a.x.max(self.point_b.x).max(self.point_c.x);
         let bb_min_y = self.point_a.y.min(self.point_b.y).min(self.point_c.y);
@@ -35,9 +34,10 @@ impl Triangle {
 
         let total_area = self.area();
         // z index hack
-        if total_area < 1.0 {
-            return Ok(());
-        }
+        // breaks the triangle demo
+        // if total_area < 1.0 {
+        //     return Ok(());
+        // }
 
         // Figure out how to do this in parallel
         // Will probably need to adjust the Image module
@@ -58,7 +58,12 @@ impl Triangle {
                 }
                 let x_unsigned = usize::try_from(x)?;
                 let y_unsigned = usize::try_from(y)?;
-                img.set(x_unsigned, y_unsigned, color.rgba_value())?;
+                let color = RGB {
+                    r: (255.0 * alpha) as u8,
+                    g: (255.0 * beta) as u8,
+                    b: (255.0 * gamma) as u8,
+                };
+                img.set_pixel(x_unsigned, y_unsigned, color)?;
             }
         }
         Ok(())

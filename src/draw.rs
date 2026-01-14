@@ -1,14 +1,13 @@
 use crate::{
     colors::Color,
     obj::ObjFile,
-    tga::{Image, RGBA},
+    tga::{ColorSpace, Image, RGBA},
     triangle::Triangle,
     types::Point,
 };
 use anyhow::Result;
-use rand::{seq::IndexedRandom, thread_rng};
 
-pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
+pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
     let height = img.height;
     let verticies = obj.verticies;
@@ -42,47 +41,12 @@ pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
                 point_b,
                 point_c,
             };
-            let mut rng = thread_rng();
 
-            let color = *[
-                Color::White,
-                Color::Red,
-                Color::Green,
-                Color::Blue,
-                Color::Yellow,
-            ]
-            .choose(&mut rng)
-            .unwrap();
-            triangle.draw(color, img)?;
-            // draw_triangle(&point_a, &point_b, &point_c, img, Color::Red)?;
+            // triangle.draw::<T>(T::random(), img)?;
         }
     }
     Ok(())
 }
-
-// pub fn draw_triangle(
-//     point_a: &Point,
-//     point_b: &Point,
-//     point_c: &Point,
-//     img: &mut Image<RGBA>,
-//     color: Color,
-// ) -> Result<()> {
-//     let bb_min_x = point_a.x.min(point_b.x).min(point_c.x);
-//     let bb_max_x = point_a.x.max(point_b.x).max(point_c.x);
-//     let bb_min_y = point_a.y.min(point_b.y).min(point_c.y);
-//     let bb_max_y = point_a.y.max(point_b.y).max(point_c.y);
-//
-//     // Figure out how to do this in parallel
-//     // Will probably need to adjust the Image module
-//     for y in bb_min_y..=bb_max_y {
-//         for x in bb_min_x..=bb_max_x {
-//             let x_unsigned = usize::try_from(x)?;
-//             let y_unsigned = usize::try_from(y)?;
-//             img.set(x_unsigned, y_unsigned, color.rgba_value())?;
-//         }
-//     }
-//     Ok(())
-// }
 
 fn draw_line(
     point_one: &Point,
@@ -122,9 +86,9 @@ fn draw_line(
         let line_y = (point_one_y + t * (point_two_y - point_one_y)) as usize;
         let x_usize = usize::try_from(x)?;
         if steep {
-            img.set(line_y, x_usize, color.rgba_value())?;
+            img.set_pixel(line_y, x_usize, color.rgba_value())?;
         } else {
-            img.set(x_usize, line_y, color.rgba_value())?;
+            img.set_pixel(x_usize, line_y, color.rgba_value())?;
         }
     }
     Ok(())

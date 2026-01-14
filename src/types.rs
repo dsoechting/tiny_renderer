@@ -20,9 +20,3 @@ pub struct Face {
     pub two: usize,
     pub three: usize,
 }
-
-// #[derive(Debug)]
-// pub struct Triange {
-//
-//
-// }

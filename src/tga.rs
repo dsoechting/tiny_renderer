@@ -5,12 +5,17 @@ use std::io::{BufWriter, prelude::*};
 use std::u8;
 use std::{fs::File, io};
 
+use rand::{rng, seq::IndexedRandom};
+
+use crate::colors::Color;
+
 unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
     ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
 }
 
 pub trait ColorSpace {
     fn new() -> Self;
+    fn random() -> Self;
     const BPP: u8;
 }
 
@@ -36,11 +41,33 @@ impl ColorSpace for Grayscale {
     fn new() -> Self {
         Grayscale { i: 0 }
     }
+    fn random() -> Self {
+        Grayscale { i: 0 }
+    }
     const BPP: u8 = 1;
 }
 impl ColorSpace for RGB {
     fn new() -> Self {
         RGB { r: 0, g: 0, b: 0 }
+    }
+    fn random() -> Self {
+        let mut rng = rng();
+
+        let rgba = [
+            Color::White,
+            Color::Red,
+            Color::Green,
+            Color::Blue,
+            Color::Yellow,
+        ]
+        .choose(&mut rng)
+        .unwrap()
+        .rgba_value();
+        return RGB {
+            r: rgba.r,
+            g: rgba.g,
+            b: rgba.b,
+        };
     }
     const BPP: u8 = 3;
 }
@@ -52,6 +79,20 @@ impl ColorSpace for RGBA {
             b: 0,
             a: 0,
         }
+    }
+    fn random() -> Self {
+        let mut rng = rng();
+
+        return [
+            Color::White,
+            Color::Red,
+            Color::Green,
+            Color::Blue,
+            Color::Yellow,
+        ]
+        .choose(&mut rng)
+        .unwrap()
+        .rgba_value();
     }
     const BPP: u8 = 4;
 }
@@ -94,7 +135,7 @@ impl<T: ColorSpace + Copy> Image<T> {
         }
     }
 
-    pub fn set(&mut self, x: usize, y: usize, color: T) -> Result<()> {
+    pub fn set_pixel(&mut self, x: usize, y: usize, color: T) -> Result<()> {
         if x >= self.width || y >= self.height {
             return Err(anyhow!("Coordinates out of bounds for image"));
         }
