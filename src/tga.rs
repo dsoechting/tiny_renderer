@@ -1,13 +1,12 @@
 // Credit here: https://github.com/phinjensen/rustyrender/blob/lesson-0/src/tga.rs
 use anyhow::Result;
 use anyhow::anyhow;
+use rand::Rng;
 use std::io::{BufWriter, prelude::*};
 use std::u8;
 use std::{fs::File, io};
 
-use rand::{rng, seq::IndexedRandom};
-
-use crate::colors::Color;
+use rand::rng;
 
 unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
     ::std::slice::from_raw_parts((p as *const T) as *const u8, ::std::mem::size_of::<T>())
@@ -42,7 +41,10 @@ impl ColorSpace for Grayscale {
         Grayscale { i: 0 }
     }
     fn random() -> Self {
-        Grayscale { i: 0 }
+        let mut rng = rng();
+
+        let rand_val: u8 = rng.random();
+        Grayscale { i: rand_val }
     }
     const BPP: u8 = 1;
 }
@@ -52,22 +54,15 @@ impl ColorSpace for RGB {
     }
     fn random() -> Self {
         let mut rng = rng();
+        let rand_r: u8 = rng.random();
+        let rand_b: u8 = rng.random();
+        let rand_g: u8 = rng.random();
 
-        let rgba = [
-            Color::White,
-            Color::Red,
-            Color::Green,
-            Color::Blue,
-            Color::Yellow,
-        ]
-        .choose(&mut rng)
-        .unwrap()
-        .rgba_value();
-        return RGB {
-            r: rgba.r,
-            g: rgba.g,
-            b: rgba.b,
-        };
+        RGB {
+            r: rand_r,
+            g: rand_g,
+            b: rand_b,
+        }
     }
     const BPP: u8 = 3;
 }
@@ -82,17 +77,16 @@ impl ColorSpace for RGBA {
     }
     fn random() -> Self {
         let mut rng = rng();
+        let rand_r: u8 = rng.random();
+        let rand_b: u8 = rng.random();
+        let rand_g: u8 = rng.random();
 
-        return [
-            Color::White,
-            Color::Red,
-            Color::Green,
-            Color::Blue,
-            Color::Yellow,
-        ]
-        .choose(&mut rng)
-        .unwrap()
-        .rgba_value();
+        RGBA {
+            r: rand_r,
+            g: rand_g,
+            b: rand_b,
+            a: 1,
+        }
     }
     const BPP: u8 = 4;
 }
@@ -141,6 +135,10 @@ impl<T: ColorSpace + Copy> Image<T> {
         }
         self.data[x + y * self.width] = color;
         Ok(())
+    }
+
+    pub fn get_pixel(&self, x: usize, y: usize) -> Option<&T> {
+        self.data.get(x + y * self.width)
     }
 
     fn data_vec(&self) -> Vec<u8> {
