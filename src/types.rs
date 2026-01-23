@@ -4,11 +4,11 @@ pub struct Point {
     pub y: isize,
 }
 
-#[derive(Debug)]
-pub struct Vector3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+#[derive(Debug, Clone)]
+pub struct Vector3<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
 // Indexes of verticies

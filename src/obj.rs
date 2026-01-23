@@ -8,11 +8,11 @@ use std::{
 
 #[derive(Default)]
 pub struct ObjFile {
-    pub verticies: Vec<Vector3>,
+    pub verticies: Vec<Vector3<f64>>,
     pub faces: Vec<Face>,
 }
 
-fn parse_vertex(str: &str) -> Option<Vector3> {
+fn parse_vertex(str: &str) -> Option<Vector3<f64>> {
     let mut itr = str.split(' ');
     let _ = itr.next();
     let x_opt = itr.next();
@@ -53,7 +53,7 @@ fn parse_face(str: &str) -> Option<Face> {
 
 pub fn parse_obj_file(path: &Path) -> Result<ObjFile> {
     let file_string = fs::read_to_string(path)?;
-    let mut verticies: Vec<Vector3> = Vec::new();
+    let mut verticies: Vec<Vector3<f64>> = Vec::new();
     let mut faces: Vec<Face> = Vec::new();
     for line in file_string.lines() {
         let mut elements_itr = line.split(' ');
