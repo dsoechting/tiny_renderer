@@ -1,53 +1,58 @@
 use crate::{
     colors::Color,
     obj::ObjFile,
-    tga::{ColorSpace, Image, RGBA},
+    tga::{ColorSpace, Grayscale, Image, RGBA},
     triangle::Triangle,
-    types::Point,
+    types::{Point, Vector3},
 };
 use anyhow::Result;
 
-pub fn draw_obj_file(obj: ObjFile, img: &mut Image<RGBA>) -> Result<()> {
+pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
     let height = img.height;
     let verticies = obj.verticies;
     let faces = obj.faces;
+    let mut z_buff = Image::<Grayscale>::new(width, height);
+    let width_f64 = width as f64;
+    let height_f64 = height as f64;
+
     for face in faces {
         if let (Some(vertex_one), Some(vertex_two), Some(vertex_three)) = (
             verticies.get(face.one - 1),
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            let point_a = Point {
-                x: (((vertex_one.x + 1.0) * 0.5 * width as f64) as isize).min((width - 1) as isize),
-                y: (((vertex_one.y + 1.0) * 0.5 * height as f64) as isize)
-                    .min((width - 1) as isize),
+            // Convert Triangle to use Vector3 so that I can make a depth buffer
+            let vector_a = Vector3 {
+                x: ((vertex_one.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                y: ((vertex_one.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                z: ((vertex_one.z + 1.0) * (255. / 2.)) as isize,
             };
 
-            let point_b = Point {
-                x: (((vertex_two.x + 1.0) * 0.5 * width as f64) as isize).min((width - 1) as isize),
-                y: (((vertex_two.y + 1.0) * 0.5 * height as f64) as isize)
-                    .min((width - 1) as isize),
+            let vector_b = Vector3 {
+                x: ((vertex_two.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                y: ((vertex_two.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                z: ((vertex_two.z + 1.0) * (255. / 2.)) as isize,
             };
 
-            let point_c = Point {
-                x: (((vertex_three.x + 1.0) * 0.5 * width as f64) as isize)
-                    .min((width - 1) as isize),
-                y: (((vertex_three.y + 1.0) * 0.5 * height as f64) as isize)
-                    .min((width - 1) as isize),
+            let vector_c = Vector3 {
+                x: ((vertex_three.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                y: ((vertex_three.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                z: ((vertex_three.z + 1.0) * (255. / 2.)) as isize,
             };
             let triangle = Triangle {
-                point_a,
-                point_b,
-                point_c,
+                vector_a,
+                vector_b,
+                vector_c,
             };
 
             // z index hack
             if triangle.area() > 1.0 {
-                triangle.draw::<RGBA>(Color::Red.rgba_value(), img)?;
+                triangle.draw::<T>(T::random(), img, Some(&mut z_buff))?;
             }
         }
     }
+    z_buff.write_to_file("z_buffer.tga", true, false)?;
     Ok(())
 }
 
