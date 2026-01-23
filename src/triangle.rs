@@ -69,11 +69,15 @@ impl Triangle {
                 let depth_color = Grayscale { i: z as u8 };
                 let x_unsigned = usize::try_from(x)?;
                 let y_unsigned = usize::try_from(y)?;
-                if let Some(z_buffer) = z_buffer_opt.as_deref_mut()
-                    && let Some(z_depth) = z_buffer.get_pixel(x_unsigned, y_unsigned)
-                    && depth_color.i > z_depth.i
-                {
-                    z_buffer.set_pixel(x_unsigned, y_unsigned, depth_color)?;
+
+                if let Some(z_buffer) = z_buffer_opt.as_deref_mut() {
+                    if let Some(z_depth) = z_buffer.get_pixel(x_unsigned, y_unsigned)
+                        && depth_color.i > z_depth.i
+                    {
+                        z_buffer.set_pixel(x_unsigned, y_unsigned, depth_color)?;
+                        img.set_pixel(x_unsigned, y_unsigned, color)?;
+                    }
+                } else {
                     img.set_pixel(x_unsigned, y_unsigned, color)?;
                 }
             }
