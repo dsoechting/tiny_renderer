@@ -1,4 +1,4 @@
-use crate::types::{Face, Vector3};
+use crate::{math::Vector3, types::Face};
 use anyhow::Result;
 
 use std::{
@@ -25,7 +25,7 @@ fn parse_vertex(str: &str) -> Option<Vector3<f64>> {
             z_str.parse::<f64>(),
         )
     {
-        return Some(Vector3 { x, y, z });
+        return Some(Vector3::new([x, y, z]));
     }
     None
 }

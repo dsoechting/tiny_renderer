@@ -1,9 +1,10 @@
 use crate::{
     colors::Color,
+    math::Vector3,
     obj::ObjFile,
     tga::{ColorSpace, Grayscale, Image, RGBA},
     triangle::Triangle,
-    types::{Point, Vector3},
+    types::Point,
 };
 use anyhow::Result;
 
@@ -22,24 +23,24 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            // Convert Triangle to use Vector3 so that I can make a depth buffer
-            let vector_a = Vector3 {
-                x: ((vertex_one.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                y: ((vertex_one.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                z: ((vertex_one.z + 1.0) * (255. / 2.)) as isize,
-            };
+            let vector_a = Vector3::new([
+                ((vertex_one.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_one.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_one.z() + 1.0) * (255. / 2.)) as isize,
+            ]);
 
-            let vector_b = Vector3 {
-                x: ((vertex_two.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                y: ((vertex_two.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                z: ((vertex_two.z + 1.0) * (255. / 2.)) as isize,
-            };
+            let vector_b = Vector3::new([
+                ((vertex_two.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_two.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_two.z() + 1.0) * (255. / 2.)) as isize,
+            ]);
 
-            let vector_c = Vector3 {
-                x: ((vertex_three.x + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                y: ((vertex_three.y + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                z: ((vertex_three.z + 1.0) * (255. / 2.)) as isize,
-            };
+            let vector_c = Vector3::new([
+                ((vertex_three.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_three.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
+                ((vertex_three.z() + 1.0) * (255. / 2.)) as isize,
+            ]);
+
             let triangle = Triangle {
                 vector_a,
                 vector_b,
