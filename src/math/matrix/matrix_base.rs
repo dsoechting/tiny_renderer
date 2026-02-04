@@ -28,6 +28,10 @@ where
     fn columns(&self) -> [Vector<T, R>; C] {
         array::from_fn(|i| Vector::new(self.data.map(|row| row.get_data()[i])))
     }
+
+    pub fn transpose(&self) -> Matrix<T, C, R> {
+        Matrix::new(self.columns())
+    }
 }
 
 impl<T, const R: usize, const C: usize> PartialEq for Matrix<T, R, C>
@@ -116,6 +120,21 @@ mod test {
         let matrix_two = Matrix::new([vec_three, vec_four, vec_five]);
 
         let result = matrix.mul(matrix_two);
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn matrix_transpose_test() {
+        let vec_expected_one = Vector::new([1, 4]);
+        let vec_expected_two = Vector::new([2, 5]);
+        let vec_expected_three = Vector::new([3, 6]);
+        let expected = Matrix::new([vec_expected_one, vec_expected_two, vec_expected_three]);
+
+        let vec_one = Vector::new([1, 2, 3]);
+        let vec_two = Vector::new([4, 5, 6]);
+        let matrix = Matrix::new([vec_one, vec_two]);
+        let result = matrix.transpose();
 
         assert_eq!(expected, result);
     }
