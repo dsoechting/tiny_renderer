@@ -27,10 +27,6 @@ where
     pub fn get_data(&self) -> [T; N] {
         self.data
     }
-
-    pub fn get<const I: usize>(&self) -> &T {
-        &self.data[I]
-    }
 }
 
 impl<T, const N: usize> Add for Vector<T, N>
@@ -82,7 +78,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::math::vector::Vector;
+    use crate::math::Vector;
 
     #[test]
     fn vec3_add_int() {

@@ -1,5 +1,5 @@
 use crate::{
-    math::Vector3,
+    math::{Matrix, Vector3},
     tga::{ColorSpace, Grayscale, Image},
 };
 use anyhow::Result;
