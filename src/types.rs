@@ -4,13 +4,6 @@ pub struct Point {
     pub y: isize,
 }
 
-#[derive(Debug, Clone)]
-pub struct Vector3<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-}
-
 // Indexes of verticies
 // Hard coding three ints. Will likely change down the line
 // Just need to parse an obj file for now
