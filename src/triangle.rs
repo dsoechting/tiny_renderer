@@ -1,5 +1,5 @@
 use crate::{
-    math::{Matrix, Vector3},
+    math::Vector3,
     tga::{ColorSpace, Grayscale, Image},
 };
 use anyhow::Result;
@@ -18,9 +18,9 @@ impl Triangle {
         vector_c: &Vector3<isize>,
     ) -> Self {
         Triangle {
-            vector_a: *vector_a,
-            vector_b: *vector_b,
-            vector_c: *vector_c,
+            vector_a: vector_a.clone(),
+            vector_b: vector_b.clone(),
+            vector_c: vector_c.clone(),
         }
     }
     pub fn area(&self) -> f64 {

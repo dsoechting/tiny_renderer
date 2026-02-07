@@ -1,25 +1,28 @@
 use std::{
     fmt::Display,
     iter::Sum,
-    ops::{Add, Mul, Sub},
+    ops::{Add, Index, IndexMut, Sub},
 };
 
-#[derive(Debug, Clone, Copy)]
+use num::Num;
+
+#[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
 where
-    T: Add + Sub + Mul + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     data: [T; N],
 }
 
+// General impl block
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Add<Output = T> + Sum + Sub + Mul<Output = T> + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     pub fn new(data: [T; N]) -> Self {
         Self { data }
     }
-    pub fn dot(&self, other: Self) -> T {
+    pub fn dot(&self, other: &Self) -> T {
         let res: T = self.data.iter().zip(other.data).map(|(&x, y)| x * y).sum();
         res
     }
@@ -29,9 +32,10 @@ where
     }
 }
 
+// Add impl block
 impl<T, const N: usize> Add for Vector<T, N>
 where
-    T: Add<Output = T> + Sub + Mul + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     type Output = Self;
     fn add(self, other: Self) -> Self::Output {
@@ -43,9 +47,10 @@ where
     }
 }
 
+// Sub impl block
 impl<T, const N: usize> Sub for Vector<T, N>
 where
-    T: Add + Sub<Output = T> + Mul + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {
@@ -57,9 +62,10 @@ where
     }
 }
 
+// Display impl block
 impl<T, const N: usize> Display for Vector<T, N>
 where
-    T: Add + Sub + Mul + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let res: String = self.data.iter().map(|n| format!("{}, ", n)).collect();
@@ -67,12 +73,32 @@ where
     }
 }
 
+// PartialEq impl block
 impl<T, const N: usize> PartialEq for Vector<T, N>
 where
-    T: Add + Sub + Mul + PartialEq + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data
+    }
+}
+
+impl<T, const N: usize> Index<usize> for Vector<T, N>
+where
+    T: Num + Sum + Copy + Display,
+{
+    type Output = T;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<T, const N: usize> IndexMut<usize> for Vector<T, N>
+where
+    T: Num + Sum + Copy + Display,
+{
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.data[index]
     }
 }
 
@@ -130,7 +156,7 @@ mod test {
         let vec_one = Vector::new([1, 2, 3]);
         let vec_two = Vector::new([4, 5, 6]);
 
-        let res = vec_one.dot(vec_two);
+        let res = vec_one.dot(&vec_two);
         assert_eq!(res, 32);
     }
 
@@ -139,7 +165,7 @@ mod test {
         let vec_one = Vector::new([1., 2., 3.]);
         let vec_two = Vector::new([4., 5., 6.]);
 
-        let res = vec_one.dot(vec_two);
+        let res = vec_one.dot(&vec_two);
         assert_eq!(res, 32.);
     }
 }
