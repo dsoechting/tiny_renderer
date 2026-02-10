@@ -1,12 +1,34 @@
+use std::f64::consts::PI;
+
 use crate::{
     colors::Color,
-    math::Vector3,
+    math::{Matrix, Vector3},
     obj::ObjFile,
     tga::{ColorSpace, Grayscale, Image, RGBA},
     triangle::Triangle,
     types::Point,
 };
 use anyhow::Result;
+
+fn rotate(vec: &Vector3<f64>) -> Vector3<f64> {
+    let a = PI / 6.;
+    let cos_a = a.cos();
+    let sin_a = a.sin();
+    let r_y_vec_one = Vector3::new([cos_a, 0., sin_a]);
+    let r_y_vec_two = Vector3::new([0., 1., 0.]);
+    let r_y_vec_three = Vector3::new([-sin_a, 0., cos_a]);
+    let r_y = Matrix::new([r_y_vec_one, r_y_vec_two, r_y_vec_three]);
+    let temp = Matrix::new([vec.clone()]).transpose();
+    (r_y * temp).to_vector()
+}
+
+fn project(vec: &Vector3<f64>, width: f64, height: f64) -> Vector3<isize> {
+    Vector3::new([
+        ((vec.x() + 1.0) * 0.5 * width).min(width - 1.0) as isize,
+        ((vec.y() + 1.0) * 0.5 * height).min(width - 1.0) as isize,
+        ((vec.z() + 1.0) * (255. / 2.)) as isize,
+    ])
+}
 
 pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
@@ -23,28 +45,10 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            let vector_a = Vector3::new([
-                ((vertex_one.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_one.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_one.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
-            let vector_b = Vector3::new([
-                ((vertex_two.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_two.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_two.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
-            let vector_c = Vector3::new([
-                ((vertex_three.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_three.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_three.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
             let triangle = Triangle {
-                vector_a,
-                vector_b,
-                vector_c,
+                vector_a: project(&rotate(vertex_one), width_f64, height_f64),
+                vector_b: project(&rotate(vertex_two), width_f64, height_f64),
+                vector_c: project(&rotate(vertex_three), width_f64, height_f64),
             };
 
             // z index hack

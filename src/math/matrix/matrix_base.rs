@@ -37,7 +37,7 @@ where
         self.data
     }
 
-    fn columns(&self) -> [Vector<T, R>; C] {
+    pub fn columns(&self) -> [Vector<T, R>; C] {
         let rows = self.rows();
         array::from_fn(|i| {
             let vector_data = array::from_fn(|j| rows[j].get_data()[i]);
@@ -47,6 +47,15 @@ where
 
     pub fn transpose(&self) -> Matrix<T, C, R> {
         Matrix::new(self.columns())
+    }
+}
+
+impl<T, const R: usize> Matrix<T, R, 1>
+where
+    T: Num + Sum + Copy + Display,
+{
+    pub fn to_vector(self) -> Vector<T, R> {
+        self.columns()[0].clone()
     }
 }
 
