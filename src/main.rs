@@ -1,6 +1,5 @@
 use std::{path::Path, time::Instant};
 
-use anyhow::Result;
 use tiny_renderer::{
     colors::Color,
     draw::draw_obj_file,
@@ -13,7 +12,7 @@ use tiny_renderer::{
 fn main() {
     let start = Instant::now();
     test_obj_files();
-    test_triangles();
+    // test_triangles();
     let end = Instant::now();
     println!("Duration: {:?}", end - start);
 }
@@ -52,18 +51,19 @@ fn test_triangles() {
         vector_b: vector_h,
         vector_c: vector_i,
     };
-    triangle_1.draw(Color::Red.rgba_value(), &mut img, None);
-    triangle_2.draw(Color::White.rgba_value(), &mut img, None);
-    triangle_3.draw(Color::Green.rgba_value(), &mut img, None);
+    let _ = triangle_1.draw(Color::Red.rgba_value(), &mut img, None);
+    let _ = triangle_2.draw(Color::White.rgba_value(), &mut img, None);
+    let _ = triangle_3.draw(Color::Green.rgba_value(), &mut img, None);
 
-    img.write_to_file("triangles.tga", true, true);
+    let _ = img.write_to_file("triangles.tga", true, true);
 }
 
 fn test_obj_files() {
-    let head_path = Path::new("./assets/head.obj");
-    let body_path = Path::new("./assets/body.obj");
+    let _head_path = Path::new("./assets/head.obj");
+    let _body_path = Path::new("./assets/body.obj");
     let diablo_path = Path::new("./assets/diablo.obj");
     let path = diablo_path;
+    // let path = body_path;
 
     let width: usize = 1600;
     let height: usize = 1600;
@@ -74,7 +74,7 @@ fn test_obj_files() {
 
         match draw_res {
             Ok(_) => {
-                img.write_to_file("model.tga", true, true);
+                let _ = img.write_to_file("model.tga", true, true);
             }
             Err(e) => {
                 eprintln!("Failed to render obj object: {:?}", e);

@@ -22,12 +22,18 @@ fn rotate(vec: &Vector3<f64>) -> Vector3<f64> {
     (r_y * temp).to_vector()
 }
 
-fn project(vec: &Vector3<f64>, width: f64, height: f64) -> Vector3<isize> {
+fn project(vec: Vector3<f64>, width: f64, height: f64) -> Vector3<isize> {
     Vector3::new([
         ((vec.x() + 1.0) * 0.5 * width).min(width - 1.0) as isize,
         ((vec.y() + 1.0) * 0.5 * height).min(width - 1.0) as isize,
         ((vec.z() + 1.0) * (255. / 2.)) as isize,
     ])
+}
+
+fn perspective(vec: Vector3<f64>) -> Vector3<f64> {
+    let camera = 3.;
+    let scalar = 1. - vec.z() / camera;
+    vec / scalar
 }
 
 pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
@@ -46,10 +52,12 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             verticies.get(face.three - 1),
         ) {
             let triangle = Triangle {
-                vector_a: project(&rotate(vertex_one), width_f64, height_f64),
-                vector_b: project(&rotate(vertex_two), width_f64, height_f64),
-                vector_c: project(&rotate(vertex_three), width_f64, height_f64),
+                vector_a: project(perspective(rotate(vertex_one)), width_f64, height_f64),
+                vector_b: project(perspective(rotate(vertex_two)), width_f64, height_f64),
+                vector_c: project(perspective(rotate(vertex_three)), width_f64, height_f64),
             };
+
+            // dbg!(vertex_one, vertex_two, vertex_three, &triangle);
 
             // z index hack
             if triangle.area() > 1.0 {
@@ -61,7 +69,7 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
     Ok(())
 }
 
-fn draw_line(
+pub fn draw_line(
     point_one: &Point,
     point_two: &Point,
     img: &mut Image<RGBA>,

@@ -1,7 +1,7 @@
 use std::{
-    fmt::Display,
+    fmt::{Debug, Display},
     iter::Sum,
-    ops::{Add, Index, IndexMut, Sub},
+    ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
 use num::Num;
@@ -59,6 +59,53 @@ where
             out.data[i] = out.data[i] - other.data[i];
         }
         out
+    }
+}
+
+impl<T, const N: usize> Div<T> for &Vector<T, N>
+where
+    T: Num + Sum + Copy + Display + Debug,
+{
+    type Output = Vector<T, N>;
+    fn div(self, rhs: T) -> Self::Output {
+        Vector {
+            data: self.data.map(|element| {
+                // dbg!(element, rhs, element / rhs);
+                element / rhs
+            }),
+        }
+    }
+}
+
+impl<T, const N: usize> Div<T> for Vector<T, N>
+where
+    T: Num + Sum + Copy + Display + Debug,
+{
+    type Output = Self;
+    fn div(self, rhs: T) -> Self::Output {
+        (&self).div(rhs)
+    }
+}
+
+impl<T, const N: usize> Mul<T> for &Vector<T, N>
+where
+    T: Num + Sum + Copy + Display,
+{
+    type Output = Vector<T, N>;
+    fn mul(self, rhs: T) -> Self::Output {
+        Vector {
+            data: self.data.map(|element| element * rhs),
+        }
+    }
+}
+
+impl<T, const N: usize> Mul<T> for Vector<T, N>
+where
+    T: Num + Sum + Copy + Display,
+{
+    type Output = Self;
+    fn mul(self, rhs: T) -> Self::Output {
+        (&self).mul(rhs)
     }
 }
 
