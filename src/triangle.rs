@@ -1,6 +1,6 @@
 use crate::{
     math::Vector3,
-    tga::{ColorSpace, Grayscale, Image},
+    tga::{ColorSpace, Image},
 };
 use anyhow::Result;
 
@@ -34,7 +34,7 @@ impl Triangle {
         &self,
         color: T,
         img: &mut Image<T>,
-        mut z_buffer_opt: Option<&mut Image<Grayscale>>,
+        mut z_buff_opt: Option<&mut Vec<Vec<f64>>>,
     ) -> Result<()> {
         let bb_min_x = self
             .vector_a
@@ -58,7 +58,6 @@ impl Triangle {
             .max(self.vector_c.y());
 
         let total_area = self.area();
-
         // Figure out how to do this in parallel
         // Will probably need to adjust the Image module
         for y in bb_min_y..=bb_max_y {
@@ -82,22 +81,73 @@ impl Triangle {
                 let z = alpha * self.vector_a.z() as f64
                     + beta * self.vector_b.z() as f64
                     + gamma * self.vector_c.z() as f64;
-                let depth_color = Grayscale { i: z as u8 };
-                let x_unsigned = usize::try_from(x)?;
-                let y_unsigned = usize::try_from(y)?;
 
-                if let Some(z_buffer) = z_buffer_opt.as_deref_mut() {
-                    if let Some(z_depth) = z_buffer.get_pixel(x_unsigned, y_unsigned)
-                        && depth_color.i > z_depth.i
-                    {
-                        z_buffer.set_pixel(x_unsigned, y_unsigned, depth_color)?;
+                // Filter out negative values, they're off screen
+                if let (Ok(x_unsigned), Ok(y_unsigned)) = (usize::try_from(x), usize::try_from(y)) {
+                    if let Some(z_buffer) = z_buff_opt.as_deref_mut() {
+                        // Direct index feels risky, but it should be safe.
+                        if z > z_buffer[x_unsigned][y_unsigned] {
+                            z_buffer[x_unsigned][y_unsigned] = z;
+                            img.set_pixel(x_unsigned, y_unsigned, color)?;
+                        }
+                    } else {
                         img.set_pixel(x_unsigned, y_unsigned, color)?;
                     }
-                } else {
-                    img.set_pixel(x_unsigned, y_unsigned, color)?;
                 }
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        colors::Color,
+        math::Vector3,
+        tga::{Image, RGBA},
+        triangle::Triangle,
+    };
+
+    #[test]
+    fn test_triangles() {
+        let width: usize = 128;
+        let height: usize = 128;
+        let mut img = Image::<RGBA>::new(width, height);
+
+        // Trianlge 1
+        let vector_a = Vector3::new([7, 45, 0]);
+        let vector_b = Vector3::new([35, 100, 0]);
+        let vector_c = Vector3::new([45, 60, 0]);
+        let triangle_1 = Triangle {
+            vector_a,
+            vector_b,
+            vector_c,
+        };
+
+        // Triangle 2
+        let vector_d = Vector3::new([120, 35, 0]);
+        let vector_e = Vector3::new([90, 5, 0]);
+        let vector_f = Vector3::new([45, 110, 0]);
+        let triangle_2 = Triangle {
+            vector_a: vector_d,
+            vector_b: vector_e,
+            vector_c: vector_f,
+        };
+
+        // Triangle 3
+        let vector_g = Vector3::new([115, 83, 0]);
+        let vector_h = Vector3::new([80, 90, 0]);
+        let vector_i = Vector3::new([85, 120, 0]);
+        let triangle_3 = Triangle {
+            vector_a: vector_g,
+            vector_b: vector_h,
+            vector_c: vector_i,
+        };
+        let _ = triangle_1.draw(Color::Red.rgba_value(), &mut img, None);
+        let _ = triangle_2.draw(Color::White.rgba_value(), &mut img, None);
+        let _ = triangle_3.draw(Color::Green.rgba_value(), &mut img, None);
+
+        let _ = img.write_to_file("triangles.tga", true, true);
     }
 }

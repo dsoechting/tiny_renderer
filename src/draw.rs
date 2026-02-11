@@ -1,6 +1,8 @@
+use std::f64::consts::PI;
+
 use crate::{
     colors::Color,
-    math::Vector3,
+    math::{Matrix, Vector3},
     obj::ObjFile,
     tga::{ColorSpace, Grayscale, Image, RGBA},
     triangle::Triangle,
@@ -8,12 +10,39 @@ use crate::{
 };
 use anyhow::Result;
 
+fn rotate(vec: &Vector3<f64>) -> Vector3<f64> {
+    let a = PI / 6.;
+    let cos_a = a.cos();
+    let sin_a = a.sin();
+    let r_y_vec_one = Vector3::new([cos_a, 0., sin_a]);
+    let r_y_vec_two = Vector3::new([0., 1., 0.]);
+    let r_y_vec_three = Vector3::new([-sin_a, 0., cos_a]);
+    let r_y = Matrix::new([r_y_vec_one, r_y_vec_two, r_y_vec_three]);
+    // TODO: Can I avoid the clone?
+    let temp = Matrix::new([vec.clone()]).transpose();
+    (r_y * temp).to_vector()
+}
+
+fn project(vec: Vector3<f64>, width: f64, height: f64) -> Vector3<isize> {
+    Vector3::new([
+        ((vec.x() + 1.0) * 0.5 * width).min(width - 1.0) as isize,
+        ((vec.y() + 1.0) * 0.5 * height).min(width - 1.0) as isize,
+        ((vec.z() + 1.0) * (255. / 2.)) as isize,
+    ])
+}
+
+fn perspective(vec: Vector3<f64>) -> Vector3<f64> {
+    let camera = 3.;
+    let scalar = 1. - vec.z() / camera;
+    vec / scalar
+}
+
 pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
     let height = img.height;
     let verticies = obj.verticies;
     let faces = obj.faces;
-    let mut z_buff = Image::<Grayscale>::new(width, height);
+    let mut z_buff = vec![vec![0.; width]; height];
     let width_f64 = width as f64;
     let height_f64 = height as f64;
 
@@ -23,28 +52,10 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             verticies.get(face.two - 1),
             verticies.get(face.three - 1),
         ) {
-            let vector_a = Vector3::new([
-                ((vertex_one.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_one.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_one.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
-            let vector_b = Vector3::new([
-                ((vertex_two.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_two.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_two.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
-            let vector_c = Vector3::new([
-                ((vertex_three.x() + 1.0) * 0.5 * width_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_three.y() + 1.0) * 0.5 * height_f64).min(width_f64 - 1.0) as isize,
-                ((vertex_three.z() + 1.0) * (255. / 2.)) as isize,
-            ]);
-
             let triangle = Triangle {
-                vector_a,
-                vector_b,
-                vector_c,
+                vector_a: project(perspective(rotate(vertex_one)), width_f64, height_f64),
+                vector_b: project(perspective(rotate(vertex_two)), width_f64, height_f64),
+                vector_c: project(perspective(rotate(vertex_three)), width_f64, height_f64),
             };
 
             // z index hack
@@ -53,11 +64,30 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             }
         }
     }
-    z_buff.write_to_file("z_buffer.tga", true, false)?;
+
+    #[cfg(debug_assertions)]
+    draw_z_buffer(&z_buff, width, height);
+
     Ok(())
 }
 
-fn draw_line(
+#[cfg(debug_assertions)]
+fn draw_z_buffer(z_buff: &Vec<Vec<f64>>, width: usize, height: usize) {
+    let mut z_buff_img = Image::<Grayscale>::new(width, height);
+    for (i, row) in z_buff.iter().enumerate() {
+        for (j, z_value_f64) in row.iter().enumerate() {
+            // This might break one day, idk. Seems like an aggressive cast
+            let depth_color = Grayscale {
+                i: *z_value_f64 as u8,
+            };
+            let _ = z_buff_img.set_pixel(i, j, depth_color);
+        }
+    }
+
+    let _ = z_buff_img.write_to_file("z_buffer.tga", true, false);
+}
+
+pub fn draw_line(
     point_one: &Point,
     point_two: &Point,
     img: &mut Image<RGBA>,
