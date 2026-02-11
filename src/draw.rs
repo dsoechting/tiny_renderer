@@ -18,6 +18,7 @@ fn rotate(vec: &Vector3<f64>) -> Vector3<f64> {
     let r_y_vec_two = Vector3::new([0., 1., 0.]);
     let r_y_vec_three = Vector3::new([-sin_a, 0., cos_a]);
     let r_y = Matrix::new([r_y_vec_one, r_y_vec_two, r_y_vec_three]);
+    // TODO: Can I avoid the clone?
     let temp = Matrix::new([vec.clone()]).transpose();
     (r_y * temp).to_vector()
 }
@@ -41,7 +42,7 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
     let height = img.height;
     let verticies = obj.verticies;
     let faces = obj.faces;
-    let mut z_buff = Image::<Grayscale>::new(width, height);
+    let mut z_buff = vec![vec![0.; width]; height];
     let width_f64 = width as f64;
     let height_f64 = height as f64;
 
@@ -57,16 +58,33 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
                 vector_c: project(perspective(rotate(vertex_three)), width_f64, height_f64),
             };
 
-            // dbg!(vertex_one, vertex_two, vertex_three, &triangle);
-
             // z index hack
             if triangle.area() > 1.0 {
                 triangle.draw::<T>(T::random(), img, Some(&mut z_buff))?;
             }
         }
     }
-    z_buff.write_to_file("z_buffer.tga", true, false)?;
+
+    #[cfg(debug_assertions)]
+    draw_z_buffer(&z_buff, width, height);
+
     Ok(())
+}
+
+#[cfg(debug_assertions)]
+fn draw_z_buffer(z_buff: &Vec<Vec<f64>>, width: usize, height: usize) {
+    let mut z_buff_img = Image::<Grayscale>::new(width, height);
+    for (i, row) in z_buff.iter().enumerate() {
+        for (j, z_value_f64) in row.iter().enumerate() {
+            // This might break one day, idk. Seems like an aggressive cast
+            let depth_color = Grayscale {
+                i: *z_value_f64 as u8,
+            };
+            let _ = z_buff_img.set_pixel(i, j, depth_color);
+        }
+    }
+
+    let _ = z_buff_img.write_to_file("z_buffer.tga", true, false);
 }
 
 pub fn draw_line(

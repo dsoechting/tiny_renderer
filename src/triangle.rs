@@ -1,6 +1,6 @@
 use crate::{
     math::Vector3,
-    tga::{ColorSpace, Grayscale, Image},
+    tga::{ColorSpace, Image},
 };
 use anyhow::Result;
 
@@ -34,7 +34,7 @@ impl Triangle {
         &self,
         color: T,
         img: &mut Image<T>,
-        mut z_buffer_opt: Option<&mut Image<Grayscale>>,
+        mut z_buff_opt: Option<&mut Vec<Vec<f64>>>,
     ) -> Result<()> {
         let bb_min_x = self
             .vector_a
@@ -58,7 +58,6 @@ impl Triangle {
             .max(self.vector_c.y());
 
         let total_area = self.area();
-
         // Figure out how to do this in parallel
         // Will probably need to adjust the Image module
         for y in bb_min_y..=bb_max_y {
@@ -82,15 +81,13 @@ impl Triangle {
                 let z = alpha * self.vector_a.z() as f64
                     + beta * self.vector_b.z() as f64
                     + gamma * self.vector_c.z() as f64;
-                let depth_color = Grayscale { i: z as u8 };
 
                 // Filter out negative values, they're off screen
                 if let (Ok(x_unsigned), Ok(y_unsigned)) = (usize::try_from(x), usize::try_from(y)) {
-                    if let Some(z_buffer) = z_buffer_opt.as_deref_mut() {
-                        if let Some(z_depth) = z_buffer.get_pixel(x_unsigned, y_unsigned)
-                            && depth_color.i > z_depth.i
-                        {
-                            z_buffer.set_pixel(x_unsigned, y_unsigned, depth_color)?;
+                    if let Some(z_buffer) = z_buff_opt.as_deref_mut() {
+                        // Direct index feels risky, but it should be safe.
+                        if z > z_buffer[x_unsigned][y_unsigned] {
+                            z_buffer[x_unsigned][y_unsigned] = z;
                             img.set_pixel(x_unsigned, y_unsigned, color)?;
                         }
                     } else {

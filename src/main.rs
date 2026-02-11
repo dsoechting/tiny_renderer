@@ -1,12 +1,9 @@
 use std::{path::Path, time::Instant};
 
 use tiny_renderer::{
-    colors::Color,
     draw::draw_obj_file,
-    math::Vector3,
     obj::parse_obj_file,
-    tga::{Image, RGB, RGBA},
-    triangle::Triangle,
+    tga::{Image, RGB},
 };
 
 fn main() {

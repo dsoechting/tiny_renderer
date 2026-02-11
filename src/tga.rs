@@ -179,12 +179,12 @@ impl<T: ColorSpace + Copy> Image<T> {
                 run_length += 1;
             }
             current_pixel += run_length as usize;
-            out.write(&[if raw {
+            out.write_all(&[if raw {
                 run_length - 1
             } else {
                 run_length + 127
             }])?;
-            out.write(
+            out.write_all(
                 &data[chunk_start
                     ..chunk_start + (if raw { run_length * T::BPP } else { T::BPP }) as usize],
             )?;
@@ -220,22 +220,23 @@ impl<T: ColorSpace + Copy> Image<T> {
             imagedescriptor: if vflip { 0x00 } else { 0x20 },
             ..Default::default()
         };
-        out.write(unsafe { any_as_u8_slice(&header) })
+        out.write_all(unsafe { any_as_u8_slice(&header) })
             .expect("Error writing TGA header.");
         if !rle {
             println!("writing non RLE");
-            out.write(&self.data_vec().as_slice())
+            out.write_all(self.data_vec().as_slice())
                 .expect("Error dumping data to TGA file.");
         } else {
             println!("writing RLE");
             self.write_rle_data(&mut out)
                 .expect("Error dumping RLE data to TGA file");
         }
-        out.write(&DEVELOPER_AREA_REF)
+        out.write_all(&DEVELOPER_AREA_REF)
             .expect("Error writing developer area ref to TGA file");
-        out.write(&EXTENSION_AREA_REF)
+        out.write_all(&EXTENSION_AREA_REF)
             .expect("Error writing extension area ref to TGA file");
-        out.write(FOOTER).expect("Error writing footer to TGA file");
+        out.write_all(FOOTER)
+            .expect("Error writing footer to TGA file");
         Ok(())
     }
 }
