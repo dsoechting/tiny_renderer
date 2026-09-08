@@ -5,7 +5,7 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use num::Num;
+use num::{Integer, Num};
 
 #[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
@@ -36,6 +36,15 @@ where
     pub fn magnitude(&self) -> f64 {
         let dot_with_self: f64 = self.dot(self).into();
         dot_with_self.sqrt()
+    }
+
+    pub fn normalize(&self) -> Vector<f64, N> {
+        let magnitude = self.magnitude();
+        let arr: [f64; N] = array::from_fn(|i| {
+            let curr_data: f64 = self.data[i].into();
+            curr_data / magnitude
+        });
+        Vector::new(arr)
     }
 }
 
@@ -88,6 +97,19 @@ where
                 element / rhs
             }),
         }
+    }
+}
+
+impl<T, const N: usize> Vector<T, N>
+where
+    T: Integer + Into<f64> + Display + Sum + Copy,
+{
+    pub fn to_float(&self) -> Vector<f64, N> {
+        let arr: [f64; N] = array::from_fn(|i| {
+            let curr_data: f64 = self.data[i].into();
+            curr_data
+        });
+        Vector::new(arr)
     }
 }
 
