@@ -6,16 +6,16 @@ use anyhow::Result;
 
 #[derive(Debug)]
 pub struct Triangle {
-    pub vector_a: Vector3<isize>,
-    pub vector_b: Vector3<isize>,
-    pub vector_c: Vector3<isize>,
+    pub vector_a: Vector3<i32>,
+    pub vector_b: Vector3<i32>,
+    pub vector_c: Vector3<i32>,
 }
 
 impl Triangle {
     pub fn create_from_refs(
-        vector_a: &Vector3<isize>,
-        vector_b: &Vector3<isize>,
-        vector_c: &Vector3<isize>,
+        vector_a: &Vector3<i32>,
+        vector_b: &Vector3<i32>,
+        vector_c: &Vector3<i32>,
     ) -> Self {
         Triangle {
             vector_a: vector_a.clone(),

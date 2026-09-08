@@ -1,4 +1,5 @@
 use std::{
+    array,
     fmt::{Debug, Display},
     iter::Sum,
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
@@ -9,7 +10,7 @@ use num::Num;
 #[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     data: [T; N],
 }
@@ -17,7 +18,7 @@ where
 // General impl block
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     pub fn new(data: [T; N]) -> Self {
         Self { data }
@@ -30,12 +31,18 @@ where
     pub fn get_data(&self) -> [T; N] {
         self.data
     }
+
+    // Not certain that this is the correct name for this function
+    pub fn magnitude(&self) -> f64 {
+        let dot_with_self: f64 = self.dot(self).into();
+        dot_with_self.sqrt()
+    }
 }
 
 // Add impl block
 impl<T, const N: usize> Add for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     type Output = Self;
     fn add(self, other: Self) -> Self::Output {
@@ -48,23 +55,30 @@ where
 }
 
 // Sub impl block
+impl<T, const N: usize> Sub for &Vector<T, N>
+where
+    T: Num + Sum + Copy + Display + Into<f64>,
+{
+    type Output = Vector<T, N>;
+    fn sub(self, other: Self) -> Self::Output {
+        let data = array::from_fn(|i| self[i] - other[i]);
+        Vector::new(data)
+    }
+}
+
 impl<T, const N: usize> Sub for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {
-        let mut out = self;
-        for i in 0..N {
-            out.data[i] = out.data[i] - other.data[i];
-        }
-        out
+        (&self).sub(&other)
     }
 }
 
 impl<T, const N: usize> Div<T> for &Vector<T, N>
 where
-    T: Num + Sum + Copy + Display + Debug,
+    T: Num + Sum + Copy + Display + Debug + Into<f64>,
 {
     type Output = Vector<T, N>;
     fn div(self, rhs: T) -> Self::Output {
@@ -79,7 +93,7 @@ where
 
 impl<T, const N: usize> Div<T> for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display + Debug,
+    T: Num + Sum + Copy + Display + Debug + Into<f64>,
 {
     type Output = Self;
     fn div(self, rhs: T) -> Self::Output {
@@ -89,7 +103,7 @@ where
 
 impl<T, const N: usize> Mul<T> for &Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     type Output = Vector<T, N>;
     fn mul(self, rhs: T) -> Self::Output {
@@ -101,7 +115,7 @@ where
 
 impl<T, const N: usize> Mul<T> for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
@@ -112,7 +126,7 @@ where
 // Display impl block
 impl<T, const N: usize> Display for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let res: String = self.data.iter().map(|n| format!("{}, ", n)).collect();
@@ -120,10 +134,10 @@ where
     }
 }
 
-// PartialEq impl block
+// Num impl block
 impl<T, const N: usize> PartialEq for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data
@@ -132,7 +146,7 @@ where
 
 impl<T, const N: usize> Index<usize> for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     type Output = T;
     fn index(&self, index: usize) -> &Self::Output {
@@ -142,7 +156,7 @@ where
 
 impl<T, const N: usize> IndexMut<usize> for Vector<T, N>
 where
-    T: Num + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display + Into<f64>,
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
