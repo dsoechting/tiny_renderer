@@ -5,7 +5,7 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
-use num::{Integer, Num};
+use num::{Integer, Num, ToPrimitive};
 
 trait Invert {
     type Output;
@@ -17,7 +17,7 @@ use crate::math::Vector;
 #[derive(Debug, Clone)]
 pub struct Matrix<T, const R: usize, const C: usize>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     data: [Vector<T, C>; R],
 }
@@ -25,7 +25,7 @@ where
 // General impl block
 impl<T, const R: usize, const C: usize> Matrix<T, R, C>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     pub fn new(data: [Vector<T, C>; R]) -> Matrix<T, R, C> {
         Matrix { data }
@@ -52,7 +52,7 @@ where
 
 impl<T, const R: usize> Matrix<T, R, 1>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     pub fn to_vector(self) -> Vector<T, R> {
         self.columns()[0].clone()
@@ -61,12 +61,13 @@ where
 
 impl<T, const N: usize> Matrix<T, N, N>
 where
-    T: Integer + Into<f64> + Display + Sum + Copy,
+    T: Integer + Display + Sum + Copy + ToPrimitive,
 {
     pub fn invert(&self) -> Option<Matrix<f64, N, N>> {
         let rows = self.rows();
         let vectors = array::from_fn(|i| {
-            let vector_data: [f64; N] = array::from_fn(|j| rows[i][j].into());
+            // TODO: Fix unwrap
+            let vector_data: [f64; N] = array::from_fn(|j| rows[i][j].to_f64().unwrap());
             Vector::new(vector_data)
         });
         let float_matrix = Matrix::new(vectors);
@@ -149,7 +150,7 @@ impl<const N: usize> Invert for Matrix<f64, N, N> {
 // Impl PartialEq
 impl<T, const R: usize, const C: usize> PartialEq for Matrix<T, R, C>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data
@@ -159,7 +160,7 @@ where
 // Impl Mul
 impl<T, const R: usize, const C: usize, const K: usize> Mul<Matrix<T, C, K>> for Matrix<T, R, C>
 where
-    T: Num + Into<f64> + Sum + PartialEq + Display + Copy,
+    T: Num + Sum + PartialEq + Display + Copy,
 {
     type Output = Matrix<T, R, K>;
     fn mul(self, other: Matrix<T, C, K>) -> Self::Output {
@@ -175,7 +176,7 @@ where
 
 impl<T, const R: usize, const C: usize> Index<usize> for Matrix<T, R, C>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     type Output = Vector<T, C>;
     fn index(&self, index: usize) -> &Self::Output {
@@ -185,7 +186,7 @@ where
 
 impl<T, const R: usize, const C: usize> IndexMut<usize> for Matrix<T, R, C>
 where
-    T: Num + Into<f64> + Sum + Copy + Display,
+    T: Num + Sum + Copy + Display,
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
