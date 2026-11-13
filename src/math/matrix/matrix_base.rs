@@ -158,12 +158,12 @@ where
 }
 
 // Impl Mul
-impl<T, const R: usize, const C: usize, const K: usize> Mul<Matrix<T, C, K>> for Matrix<T, R, C>
+impl<T, const R: usize, const C: usize, const K: usize> Mul<&Matrix<T, C, K>> for &Matrix<T, R, C>
 where
     T: Num + Sum + PartialEq + Display + Copy,
 {
     type Output = Matrix<T, R, K>;
-    fn mul(self, other: Matrix<T, C, K>) -> Self::Output {
+    fn mul(self, other: &Matrix<T, C, K>) -> Self::Output {
         let self_rows = self.rows();
         let other_cols = other.columns();
 

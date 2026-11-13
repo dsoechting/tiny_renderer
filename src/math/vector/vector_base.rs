@@ -7,6 +7,8 @@ use std::{
 
 use num::{Integer, Num, ToPrimitive};
 
+use crate::math::{Matrix, Vector3};
+
 #[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
 where
@@ -31,20 +33,39 @@ where
     pub fn get_data(&self) -> [T; N] {
         self.data
     }
+}
 
-    // pub fn magnitude(&self) -> f64 {
-    //     let dot_with_self: f64 = self.dot(self).into();
-    //     dot_with_self.sqrt()
-    // }
-    //
-    // pub fn normalize(&self) -> Vector<f64, N> {
-    //     let magnitude = self.magnitude();
-    //     let arr: [f64; N] = array::from_fn(|i| {
-    //         let curr_data: f64 = self.data[i].into();
-    //         curr_data / magnitude
-    //     });
-    //     Vector::new(arr)
-    // }
+impl Vector<f64, 4> {
+    pub fn perspective_divide(&self) -> Vector<f64, 4> {
+        let raw_data = self.data;
+        let x = raw_data.first().unwrap();
+        let y = raw_data.get(1).unwrap();
+        let z = raw_data.get(2).unwrap();
+        let w = raw_data.get(3).unwrap();
+        Vector::new([x.div(*w), y.div(*w), z.div(*w), 1.0])
+    }
+
+    pub fn drop_w(&self) -> Vector3<f64> {
+        let raw_data = self.data;
+        let x = *raw_data.first().unwrap();
+        let y = *raw_data.get(1).unwrap();
+        let z = *raw_data.get(2).unwrap();
+        Vector3::new([x, y, z])
+    }
+
+    pub fn to_matrix(&self) -> Matrix<f64, 4, 1> {
+        let raw_data = self.data;
+        let x = raw_data.first().unwrap();
+        let y = raw_data.get(1).unwrap();
+        let z = raw_data.get(2).unwrap();
+        let w = raw_data.get(3).unwrap();
+        Matrix::new([
+            Vector::new([*x]),
+            Vector::new([*y]),
+            Vector::new([*z]),
+            Vector::new([*w]),
+        ])
+    }
 }
 
 // Add impl block
@@ -167,7 +188,7 @@ where
 }
 
 // Display impl block
-impl<T, const N: usize> Display for Vector<T, N>
+impl<T, const N: usize> Display for &Vector<T, N>
 where
     T: Num + Sum + Copy + Display,
 {
