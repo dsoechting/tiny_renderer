@@ -1,5 +1,5 @@
 use core::f64;
-use std::ops::Mul;
+use std::{fs::File, io::BufWriter, io::Write, ops::Mul};
 
 use crate::{
     colors::Color,
@@ -10,36 +10,6 @@ use crate::{
     types::Point,
 };
 use anyhow::Result;
-
-// fn rotate(vec: &Vector3<f64>) -> Vector3<f64> {
-//     // Rotation factor. Likely want a param in the future
-//     // let a: f64 = PI;
-//     let a: f64 = 0.0;
-//     let cos_a = a.cos();
-//     let sin_a = a.sin();
-//     let r_y_vec_one = Vector3::new([cos_a, 0., sin_a]);
-//     let r_y_vec_two = Vector3::new([0., 1., 0.]);
-//     let r_y_vec_three = Vector3::new([-sin_a, 0., cos_a]);
-//     let r_y = Matrix::new([r_y_vec_one, r_y_vec_two, r_y_vec_three]);
-//     // TODO: Can I avoid the clone?
-//     let input_as_matrix = Matrix::new([vec.clone()]).transpose();
-//     (r_y * input_as_matrix).to_vector()
-// }
-
-// fn project(vec: Vector3<f64>, width: usize, height: usize) -> Vector3<i32> {
-//     let f_width = width as f64;
-//     let f_height = height as f64;
-//
-//     let val1 = ((vec.x() + 1.0) * 0.5 * f_width) as i32;
-//     let val2 = ((vec.y() + 1.0) * 0.5 * f_height) as i32;
-//     let val3 = ((vec.z() + 1.0) * (255. / 2.)) as i32;
-//
-//     Vector3::new([
-//         val1.min(width as i32 - 1),
-//         val2.min(height as i32 - 1),
-//         val3,
-//     ])
-// }
 
 fn viewport(x: f64, y: f64, width: f64, height: f64) -> Matrix<f64, 4, 4> {
     let vec1 = Vector::new([(width / 2.), 0.0, 0.0, (x + (width / 2.))]);
@@ -52,7 +22,7 @@ fn viewport(x: f64, y: f64, width: f64, height: f64) -> Matrix<f64, 4, 4> {
 }
 
 // This is the perspective matrix for homogenous coords
-fn perspective2(focal: f64) -> Matrix<f64, 4, 4> {
+fn perspective(focal: f64) -> Matrix<f64, 4, 4> {
     let vec1 = Vector::new([1.0, 0.0, 0.0, 0.0]);
     let vec2 = Vector::new([0.0, 1.0, 0.0, 0.0]);
     let vec3 = Vector::new([0.0, 0.0, 1.0, 0.0]);
@@ -81,12 +51,6 @@ fn look_at(eye: &Vector3<i32>, center: &Vector3<i32>, up: &Vector3<i32>) -> Matr
     &transformation_matrix * &translation_matrix
 }
 
-fn perspective(vec: Vector3<f64>) -> Vector3<f64> {
-    let camera = 3.;
-    let scalar = 1. - vec.z() / camera;
-    vec / scalar
-}
-
 pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
     let height = img.height;
@@ -94,7 +58,7 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
     let f_height = height as f64;
     let verticies = obj.verticies;
     let faces = obj.faces;
-    let mut z_buff = vec![vec![0.; width]; height];
+    let mut z_buff = vec![vec![-1.; width]; height];
 
     // Could maybe move to main
     let eye = Vector3::new([-1, 0, 2]);
@@ -102,7 +66,7 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
     let up = Vector3::new([0, 1, 0]);
     let model_view_matrix = look_at(&eye, &center, &up);
 
-    let perspective_matrix = perspective2((eye - center).magnitude());
+    let perspective_matrix = perspective((eye - center).magnitude());
 
     let composed_transformation = &perspective_matrix * &model_view_matrix;
     let viewport_matrix = viewport(
@@ -172,14 +136,7 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
                 .drop_w();
 
             // We lose the Z value here
-            // println!(
-            //     "vertex_one: {:?}\n\nvertex_two: {:?}\n\nvertex_three: {:?}\n\n",
-            //     viewport_vec_one, viewport_vec_two, viewport_vec_three
-            // );
             let triangle = Triangle {
-                // vector_a: project(perspective(rotate(vertex_one)), width, height),
-                // vector_b: project(perspective(rotate(vertex_two)), width, height),
-                // vector_c: project(perspective(rotate(vertex_three)), width, height),
                 vector_a: viewport_vec_one,
                 vector_b: viewport_vec_two,
                 vector_c: viewport_vec_three,
@@ -192,8 +149,8 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
         }
     }
 
-    #[cfg(debug_assertions)]
-    draw_z_buffer(&z_buff, width, height);
+    // #[cfg(debug_assertions)]
+    // draw_z_buffer(&z_buff, width, height);
 
     Ok(())
 }

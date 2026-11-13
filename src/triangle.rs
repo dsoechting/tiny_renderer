@@ -1,6 +1,6 @@
 use crate::{
     math::Vector3,
-    tga::{ColorSpace, Image},
+    tga::{ColorSpace, Grayscale, Image},
 };
 use anyhow::Result;
 
@@ -27,7 +27,6 @@ impl Triangle {
         0.5 * ((self.vector_b.y() - self.vector_a.y()) * (self.vector_b.x() + self.vector_a.x())
             + (self.vector_c.y() - self.vector_b.y()) * (self.vector_c.x() + self.vector_b.x())
             + (self.vector_a.y() - self.vector_c.y()) * (self.vector_a.x() + self.vector_c.x()))
-            as f64
     }
 
     pub fn draw<T: ColorSpace + Copy>(
@@ -78,9 +77,9 @@ impl Triangle {
                 if alpha.is_sign_negative() || beta.is_sign_negative() || gamma.is_sign_negative() {
                     continue;
                 }
-                let z = alpha * self.vector_a.z() as f64
-                    + beta * self.vector_b.z() as f64
-                    + gamma * self.vector_c.z() as f64;
+                let z = alpha * self.vector_a.z()
+                    + beta * self.vector_b.z()
+                    + gamma * self.vector_c.z();
 
                 // Filter out negative values, they're off screen
                 if let (Ok(x_unsigned), Ok(y_unsigned)) = (usize::try_from(x), usize::try_from(y)) {
