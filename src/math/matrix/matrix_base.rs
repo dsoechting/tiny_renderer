@@ -5,7 +5,7 @@ use std::{
     ops::{Index, IndexMut, Mul},
 };
 
-use num::{Integer, Num};
+use num::{Integer, Num, ToPrimitive};
 
 trait Invert {
     type Output;
@@ -61,12 +61,13 @@ where
 
 impl<T, const N: usize> Matrix<T, N, N>
 where
-    T: Integer + Into<f64> + Display + Sum + Copy,
+    T: Integer + Display + Sum + Copy + ToPrimitive,
 {
     pub fn invert(&self) -> Option<Matrix<f64, N, N>> {
         let rows = self.rows();
         let vectors = array::from_fn(|i| {
-            let vector_data: [f64; N] = array::from_fn(|j| rows[i][j].into());
+            // TODO: Fix unwrap
+            let vector_data: [f64; N] = array::from_fn(|j| rows[i][j].to_f64().unwrap());
             Vector::new(vector_data)
         });
         let float_matrix = Matrix::new(vectors);
@@ -157,12 +158,12 @@ where
 }
 
 // Impl Mul
-impl<T, const R: usize, const C: usize, const K: usize> Mul<Matrix<T, C, K>> for Matrix<T, R, C>
+impl<T, const R: usize, const C: usize, const K: usize> Mul<&Matrix<T, C, K>> for &Matrix<T, R, C>
 where
     T: Num + Sum + PartialEq + Display + Copy,
 {
     type Output = Matrix<T, R, K>;
-    fn mul(self, other: Matrix<T, C, K>) -> Self::Output {
+    fn mul(self, other: &Matrix<T, C, K>) -> Self::Output {
         let self_rows = self.rows();
         let other_cols = other.columns();
 

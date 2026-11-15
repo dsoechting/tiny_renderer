@@ -1,10 +1,13 @@
 use std::{
+    array,
     fmt::{Debug, Display},
     iter::Sum,
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use num::Num;
+use num::{Integer, Num, ToPrimitive};
+
+use crate::math::{Matrix, Vector3};
 
 #[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
@@ -32,6 +35,39 @@ where
     }
 }
 
+impl Vector<f64, 4> {
+    pub fn perspective_divide(&self) -> Vector<f64, 4> {
+        let raw_data = self.data;
+        let x = raw_data.first().unwrap();
+        let y = raw_data.get(1).unwrap();
+        let z = raw_data.get(2).unwrap();
+        let w = raw_data.get(3).unwrap();
+        Vector::new([x.div(*w), y.div(*w), z.div(*w), 1.0])
+    }
+
+    pub fn drop_w(&self) -> Vector3<f64> {
+        let raw_data = self.data;
+        let x = *raw_data.first().unwrap();
+        let y = *raw_data.get(1).unwrap();
+        let z = *raw_data.get(2).unwrap();
+        Vector3::new([x, y, z])
+    }
+
+    pub fn to_matrix(&self) -> Matrix<f64, 4, 1> {
+        let raw_data = self.data;
+        let x = raw_data.first().unwrap();
+        let y = raw_data.get(1).unwrap();
+        let z = raw_data.get(2).unwrap();
+        let w = raw_data.get(3).unwrap();
+        Matrix::new([
+            Vector::new([*x]),
+            Vector::new([*y]),
+            Vector::new([*z]),
+            Vector::new([*w]),
+        ])
+    }
+}
+
 // Add impl block
 impl<T, const N: usize> Add for Vector<T, N>
 where
@@ -48,17 +84,24 @@ where
 }
 
 // Sub impl block
+impl<T, const N: usize> Sub for &Vector<T, N>
+where
+    T: Num + Sum + Copy + Display,
+{
+    type Output = Vector<T, N>;
+    fn sub(self, other: Self) -> Self::Output {
+        let data = array::from_fn(|i| self[i] - other[i]);
+        Vector::new(data)
+    }
+}
+
 impl<T, const N: usize> Sub for Vector<T, N>
 where
     T: Num + Sum + Copy + Display,
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {
-        let mut out = self;
-        for i in 0..N {
-            out.data[i] = out.data[i] - other.data[i];
-        }
-        out
+        (&self).sub(&other)
     }
 }
 
@@ -74,6 +117,41 @@ where
                 element / rhs
             }),
         }
+    }
+}
+
+impl<T, const N: usize> Vector<T, N>
+where
+    T: Integer + Display + Sum + Copy + ToPrimitive,
+{
+    pub fn to_float(&self) -> Vector<f64, N> {
+        let arr: [f64; N] = array::from_fn(|i| {
+            // TODO: fix unwrap
+            let curr_data: f64 = self.data[i].to_f64().unwrap();
+            curr_data
+        });
+        Vector::new(arr)
+    }
+}
+
+impl<T, const N: usize> Vector<T, N>
+where
+    T: Display + Sum + Copy + ToPrimitive + Num,
+{
+    pub fn magnitude(&self) -> f64 {
+        // TODO: fix unwrap
+        let dot_with_self: f64 = self.dot(self).to_f64().unwrap();
+        dot_with_self.sqrt()
+    }
+
+    pub fn normalize(&self) -> Vector<f64, N> {
+        let magnitude = self.magnitude();
+        let arr: [f64; N] = array::from_fn(|i| {
+            // TODO: fix unwrap
+            let curr_data: f64 = self.data[i].to_f64().unwrap();
+            curr_data / magnitude
+        });
+        Vector::new(arr)
     }
 }
 
@@ -110,7 +188,7 @@ where
 }
 
 // Display impl block
-impl<T, const N: usize> Display for Vector<T, N>
+impl<T, const N: usize> Display for &Vector<T, N>
 where
     T: Num + Sum + Copy + Display,
 {
@@ -120,7 +198,7 @@ where
     }
 }
 
-// PartialEq impl block
+// Num impl block
 impl<T, const N: usize> PartialEq for Vector<T, N>
 where
     T: Num + Sum + Copy + Display,

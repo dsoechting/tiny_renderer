@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct Point {
-    pub x: isize,
-    pub y: isize,
+    pub x: i32,
+    pub y: i32,
 }
 
 // Indexes of verticies
