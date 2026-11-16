@@ -1,3 +1,5 @@
+use crate::math::Vector3;
+
 #[derive(Debug, Clone)]
 pub struct Point {
     pub x: i32,
@@ -12,4 +14,10 @@ pub struct Face {
     pub one: usize,
     pub two: usize,
     pub three: usize,
+}
+
+#[derive(Default)]
+pub struct Mesh {
+    pub verticies: Vec<Vector3<f64>>,
+    pub faces: Vec<Face>,
 }

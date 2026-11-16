@@ -1,16 +1,13 @@
-use crate::{math::Vector3, types::Face};
+use crate::{
+    math::Vector3,
+    types::{Face, Mesh},
+};
 use anyhow::Result;
 
 use std::{
     fs::{self},
     path::Path,
 };
-
-#[derive(Default)]
-pub struct ObjFile {
-    pub verticies: Vec<Vector3<f64>>,
-    pub faces: Vec<Face>,
-}
 
 fn parse_vertex(str: &str) -> Option<Vector3<f64>> {
     let mut itr = str.split(' ');
@@ -51,7 +48,7 @@ fn parse_face(str: &str) -> Option<Face> {
     None
 }
 
-pub fn parse_obj_file(path: &Path) -> Result<ObjFile> {
+pub fn parse_obj_file(path: &Path) -> Result<Mesh> {
     let file_string = fs::read_to_string(path)?;
     let mut verticies: Vec<Vector3<f64>> = Vec::new();
     let mut faces: Vec<Face> = Vec::new();
@@ -73,5 +70,5 @@ pub fn parse_obj_file(path: &Path) -> Result<ObjFile> {
             }
         }
     }
-    Ok(ObjFile { verticies, faces })
+    Ok(Mesh { verticies, faces })
 }
