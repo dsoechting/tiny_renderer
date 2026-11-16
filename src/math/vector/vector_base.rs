@@ -229,6 +229,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use num::{Float, integer::Roots};
+
     use crate::math::Vector;
 
     #[test]
@@ -292,5 +294,27 @@ mod test {
 
         let res = vec_one.dot(&vec_two);
         assert_eq!(res, 32.);
+    }
+    #[test]
+    fn vec_3_int_magnitude() {
+        let input = Vector::new([1, 2, 3]);
+
+        let base: f64 = 14.0;
+        let expected_result = base.sqrt();
+        let actual_result = input.magnitude();
+
+        assert_eq!(expected_result, actual_result);
+    }
+
+    #[test]
+    fn vec_3_int_normalize() {
+        let input = Vector::new([1, 2, 3]);
+
+        let denominator: f64 = 14.0.sqrt();
+        let expected_result =
+            Vector::new([1.0 / denominator, 2.0 / denominator, 3.0 / denominator]);
+        let actual_result = input.normalize();
+
+        assert_eq!(expected_result, actual_result);
     }
 }
