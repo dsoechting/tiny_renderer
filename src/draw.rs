@@ -1,11 +1,13 @@
 use core::f64;
 use std::ops::Mul;
 
+#[cfg(debug_assertions)]
 use crate::{
     math::{Matrix, Vector, Vector3},
-    obj::ObjFile,
-    tga::{ColorSpace, Grayscale, Image},
+    tga::{ColorSpace, Image},
     triangle::Triangle,
+    types::Mesh,
+    utils::draw_z_buffer::draw_z_buffer,
 };
 use anyhow::Result;
 
@@ -48,13 +50,13 @@ fn look_at(eye: &Vector3<f64>, center: &Vector3<f64>, up: &Vector3<f64>) -> Matr
     &transformation_matrix * &translation_matrix
 }
 
-pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> Result<()> {
+pub fn draw_mesh<T: ColorSpace + Copy>(mesh: Mesh, img: &mut Image<T>) -> Result<()> {
     let width = img.width;
     let height = img.height;
     let f_width = width as f64;
     let f_height = height as f64;
-    let verticies = obj.verticies;
-    let faces = obj.faces;
+    let verticies = mesh.verticies;
+    let faces = mesh.faces;
     let mut z_buff = vec![vec![-1.; width]; height];
 
     // Could maybe move to main
@@ -80,63 +82,30 @@ pub fn draw_obj_file<T: ColorSpace + Copy>(obj: ObjFile, img: &mut Image<T>) -> 
             verticies.get(face.three - 1),
         ) {
             //Convert our vertex to a 4D point for homogenous coordinates
-            let vertex_one_matrix = Matrix::new([Vector::new([
-                vertex_one.x(),
-                vertex_one.y(),
-                vertex_one.z(),
-                1.0,
-            ])])
-            .transpose();
+            let vertex_one_homogeneous =
+                Vector::new([vertex_one.x(), vertex_one.y(), vertex_one.z(), 1.0]);
 
-            let vertex_two_matrix = Matrix::new([Vector::new([
-                vertex_two.x(),
-                vertex_two.y(),
-                vertex_two.z(),
-                1.0,
-            ])])
-            .transpose();
+            let vertex_two_homogenous =
+                Vector::new([vertex_two.x(), vertex_two.y(), vertex_two.z(), 1.0]);
 
-            let vertex_three_matrix = Matrix::new([Vector::new([
-                vertex_three.x(),
-                vertex_three.y(),
-                vertex_three.z(),
-                1.0,
-            ])])
-            .transpose();
+            let vertex_three_homogenous =
+                Vector::new([vertex_three.x(), vertex_three.y(), vertex_three.z(), 1.0]);
 
-            let vertex_one_composed_vector = (&composed_transformation * &vertex_one_matrix)
-                .to_vector()
-                .perspective_divide();
-            // Need to convert vertex_one_composed_vector to matrix or impl vec * matrix when it
-            // makes sense.
-            // Need to apply viewport transform to our f64 values
-            let vertex_two_composed_vector = (&composed_transformation * &vertex_two_matrix)
-                .to_vector()
-                .perspective_divide();
-            let vertex_three_composed_vector = (&composed_transformation * &vertex_three_matrix)
-                .to_vector()
-                .perspective_divide();
-
-            let viewport_vec_one = viewport_matrix
-                .mul(&vertex_one_composed_vector.to_matrix())
-                .to_vector()
+            let vertex_one_transposed = viewport_matrix
+                .mul(&(&composed_transformation * &vertex_one_homogeneous).perspective_divide())
                 .drop_w();
-
-            let viewport_vec_two = viewport_matrix
-                .mul(&vertex_two_composed_vector.to_matrix())
-                .to_vector()
+            let vertex_two_transposed = viewport_matrix
+                .mul(&(&composed_transformation * &vertex_two_homogenous).perspective_divide())
                 .drop_w();
-
-            let viewport_vec_three = viewport_matrix
-                .mul(&vertex_three_composed_vector.to_matrix())
-                .to_vector()
+            let vertex_three_transposed = viewport_matrix
+                .mul(&(&composed_transformation * &vertex_three_homogenous).perspective_divide())
                 .drop_w();
 
             // We lose the Z value here
             let triangle = Triangle {
-                vector_a: viewport_vec_one,
-                vector_b: viewport_vec_two,
-                vector_c: viewport_vec_three,
+                vector_a: vertex_one_transposed,
+                vector_b: vertex_two_transposed,
+                vector_c: vertex_three_transposed,
             };
 
             // z index hack
