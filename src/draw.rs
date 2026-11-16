@@ -57,7 +57,7 @@ pub fn draw_mesh<T: ColorSpace + Copy>(mesh: Mesh, img: &mut Image<T>) -> Result
     let f_height = height as f64;
     let verticies = mesh.verticies;
     let faces = mesh.faces;
-    let mut z_buff = vec![vec![-1.; width]; height];
+    let mut z_buff = vec![vec![f64::MIN; width]; height];
 
     // Could maybe move to main
     let eye = Vector3::new([-1.0, 0.0, 2.0]);
@@ -110,7 +110,7 @@ pub fn draw_mesh<T: ColorSpace + Copy>(mesh: Mesh, img: &mut Image<T>) -> Result
 
             // z index hack
             if triangle.area() > 1.0 {
-                triangle.draw::<T>(T::random(), img, &mut z_buff)?;
+                rasterize_triangle(&triangle, T::random(), img, &mut z_buff)?;
             }
         }
     }
@@ -119,4 +119,137 @@ pub fn draw_mesh<T: ColorSpace + Copy>(mesh: Mesh, img: &mut Image<T>) -> Result
     draw_z_buffer(&z_buff, width, height);
 
     Ok(())
+}
+
+pub fn rasterize_triangle<T: ColorSpace + Copy>(
+    triangle: &Triangle,
+    color: T,
+    img: &mut Image<T>,
+    z_buffer: &mut [Vec<f64>],
+) -> Result<()> {
+    let bb_min_x = triangle
+        .vector_a
+        .x()
+        .min(triangle.vector_b.x())
+        .min(triangle.vector_c.x())
+        .floor() as i32;
+    let bb_max_x = triangle
+        .vector_a
+        .x()
+        .max(triangle.vector_b.x())
+        .max(triangle.vector_c.x())
+        .ceil() as i32;
+    let bb_min_y = triangle
+        .vector_a
+        .y()
+        .min(triangle.vector_b.y())
+        .min(triangle.vector_c.y())
+        .floor() as i32;
+    let bb_max_y = triangle
+        .vector_a
+        .y()
+        .max(triangle.vector_b.y())
+        .max(triangle.vector_c.y())
+        .ceil() as i32;
+
+    let total_area = triangle.area();
+    // Figure out how to do this in parallel
+    // Use rayon to give individual rows of frame buffer
+    for y in bb_min_y..=bb_max_y {
+        for x in bb_min_x..=bb_max_x {
+            let current_point = Vector3::new([x as f64, y as f64, 0.0]);
+            let alpha: f64 =
+                Triangle::create_from_refs(&current_point, &triangle.vector_b, &triangle.vector_c)
+                    .area()
+                    / total_area;
+            let beta: f64 =
+                Triangle::create_from_refs(&current_point, &triangle.vector_c, &triangle.vector_a)
+                    .area()
+                    / total_area;
+            let gamma: f64 =
+                Triangle::create_from_refs(&current_point, &triangle.vector_a, &triangle.vector_b)
+                    .area()
+                    / total_area;
+            if alpha.is_sign_negative() || beta.is_sign_negative() || gamma.is_sign_negative() {
+                continue;
+            }
+            let z = alpha * triangle.vector_a.z()
+                + beta * triangle.vector_b.z()
+                + gamma * triangle.vector_c.z();
+
+            // Filter out negative values, they're off screen
+            if let (Ok(x_unsigned), Ok(y_unsigned)) = (usize::try_from(x), usize::try_from(y)) {
+                // Direct index feels risky, but it should be safe.
+                if z > z_buffer[x_unsigned][y_unsigned] {
+                    z_buffer[x_unsigned][y_unsigned] = z;
+                    img.set_pixel(x_unsigned, y_unsigned, color)?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        colors::Color,
+        draw::rasterize_triangle,
+        math::Vector3,
+        tga::{Image, RGBA},
+        triangle::Triangle,
+    };
+
+    #[test]
+    fn test_triangles() {
+        let width: usize = 128;
+        let height: usize = 128;
+        let mut img = Image::<RGBA>::new(width, height);
+        let mut z_buff = vec![vec![f64::MIN; width]; height];
+
+        // Trianlge 1
+        let vector_a = Vector3::new([7.0, 45.0, 0.0]);
+        let vector_b = Vector3::new([35.0, 100.0, 0.0]);
+        let vector_c = Vector3::new([45.0, 60.0, 0.0]);
+        let triangle_1 = Triangle {
+            vector_a,
+            vector_b,
+            vector_c,
+        };
+
+        // Triangle 2
+        let vector_d = Vector3::new([120.0, 35.0, 0.0]);
+        let vector_e = Vector3::new([90.0, 5.0, 0.0]);
+        let vector_f = Vector3::new([45.0, 110.0, 0.0]);
+        let triangle_2 = Triangle {
+            vector_a: vector_d,
+            vector_b: vector_e,
+            vector_c: vector_f,
+        };
+
+        // Triangle 3
+        let vector_g = Vector3::new([115.0, 83.0, 0.0]);
+        let vector_h = Vector3::new([80.0, 90.0, 0.0]);
+        let vector_i = Vector3::new([85.0, 120.0, 0.0]);
+        let triangle_3 = Triangle {
+            vector_a: vector_g,
+            vector_b: vector_h,
+            vector_c: vector_i,
+        };
+        let _ = rasterize_triangle(&triangle_1, Color::Red.rgba_value(), &mut img, &mut z_buff);
+        let _ = rasterize_triangle(
+            &triangle_2,
+            Color::White.rgba_value(),
+            &mut img,
+            &mut z_buff,
+        );
+        let _ = rasterize_triangle(
+            &triangle_3,
+            Color::Green.rgba_value(),
+            &mut img,
+            &mut z_buff,
+        );
+
+        let _ = img.write_to_file("triangles.tga", true, true);
+    }
 }
