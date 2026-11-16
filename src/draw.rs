@@ -1,13 +1,11 @@
 use core::f64;
-use std::{fs::File, io::BufWriter, io::Write, ops::Mul};
+use std::ops::Mul;
 
 use crate::{
-    colors::Color,
     math::{Matrix, Vector, Vector3},
     obj::ObjFile,
-    tga::{ColorSpace, Grayscale, Image, RGBA},
+    tga::{ColorSpace, Grayscale, Image},
     triangle::Triangle,
-    types::Point,
 };
 use anyhow::Result;
 
