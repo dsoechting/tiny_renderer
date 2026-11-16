@@ -174,6 +174,19 @@ where
     }
 }
 
+// Impl Mul for Vector
+impl<T, const R: usize, const C: usize> Mul<&Vector<T, C>> for &Matrix<T, R, C>
+where
+    T: Num + Sum + PartialEq + Display + Copy,
+{
+    type Output = Vector<T, R>;
+    fn mul(self, input_vector: &Vector<T, C>) -> Vector<T, R> {
+        let self_cols = self.rows();
+        let data: [T; R] = array::from_fn(|i| self_cols.get(i).unwrap().dot(input_vector));
+        Vector::new(data)
+    }
+}
+
 impl<T, const R: usize, const C: usize> Index<usize> for Matrix<T, R, C>
 where
     T: Num + Sum + Copy + Display,
@@ -246,6 +259,22 @@ mod test {
         let matrix_two = Matrix::new([vec_three, vec_four, vec_five]);
 
         let result = matrix.mul(&matrix_two);
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn matrix_mult_test_by_vector() {
+        let expected = Vector::new([80, 140, 200]);
+
+        let vec_one = Vector::new([2, 3]);
+        let vec_two = Vector::new([4, 5]);
+        let vec_three = Vector::new([6, 7]);
+        let matrix = Matrix::new([vec_one, vec_two, vec_three]);
+
+        let vec_four = Vector::new([10, 20]);
+
+        let result = matrix.mul(&vec_four);
 
         assert_eq!(expected, result);
     }
