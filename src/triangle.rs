@@ -1,6 +1,6 @@
 use crate::{
     math::Vector3,
-    tga::{ColorSpace, Grayscale, Image},
+    tga::{ColorSpace, Image},
 };
 use anyhow::Result;
 

@@ -245,7 +245,7 @@ mod test {
         let vec_five = Vector::new([4, 5]);
         let matrix_two = Matrix::new([vec_three, vec_four, vec_five]);
 
-        let result = matrix.mul(matrix_two);
+        let result = matrix.mul(&matrix_two);
 
         assert_eq!(expected, result);
     }

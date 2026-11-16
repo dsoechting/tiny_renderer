@@ -5,7 +5,7 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use num::{Integer, Num, ToPrimitive};
+use num::{Num, ToPrimitive};
 
 use crate::math::{Matrix, Vector3};
 
@@ -122,20 +122,6 @@ where
 
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Integer + Display + Sum + Copy + ToPrimitive,
-{
-    pub fn to_float(&self) -> Vector<f64, N> {
-        let arr: [f64; N] = array::from_fn(|i| {
-            // TODO: fix unwrap
-            let curr_data: f64 = self.data[i].to_f64().unwrap();
-            curr_data
-        });
-        Vector::new(arr)
-    }
-}
-
-impl<T, const N: usize> Vector<T, N>
-where
     T: Display + Sum + Copy + ToPrimitive + Num,
 {
     pub fn magnitude(&self) -> f64 {
@@ -229,6 +215,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use num::{Float, integer::Roots};
+
     use crate::math::Vector;
 
     #[test]
@@ -292,5 +280,28 @@ mod test {
 
         let res = vec_one.dot(&vec_two);
         assert_eq!(res, 32.);
+    }
+
+    #[test]
+    fn vec_3_int_magnitude() {
+        let input = Vector::new([1, 2, 3]);
+
+        let base: f64 = 14.0;
+        let expected_result = base.sqrt();
+        let actual_result = input.magnitude();
+
+        assert_eq!(expected_result, actual_result);
+    }
+
+    #[test]
+    fn vec_3_int_normalize() {
+        let input = Vector::new([1, 2, 3]);
+
+        let denominator: f64 = 14.0.sqrt();
+        let expected_result =
+            Vector::new([1.0 / denominator, 2.0 / denominator, 3.0 / denominator]);
+        let actual_result = input.normalize();
+
+        assert_eq!(expected_result, actual_result);
     }
 }

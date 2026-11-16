@@ -29,3 +29,19 @@ where
         ])
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::math::Vector;
+
+    #[test]
+    fn vec3_cross_int() {
+        let vec_one = Vector::new([1, 2, 3]);
+        let vec_two = Vector::new([4, 5, 6]);
+
+        let expected_result = Vector::new([-3, 6, -3]);
+
+        let actual_result = vec_one.cross(&vec_two);
+        assert_eq!(expected_result, actual_result)
+    }
+}
