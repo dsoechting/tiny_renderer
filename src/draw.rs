@@ -30,10 +30,9 @@ fn perspective(focal: f64) -> Matrix<f64, 4, 4> {
     Matrix::new([vec1, vec2, vec3, vec4])
 }
 
-fn look_at(eye: &Vector3<i32>, center: &Vector3<i32>, up: &Vector3<i32>) -> Matrix<f64, 4, 4> {
-    let center_float = center.to_float();
+fn look_at(eye: &Vector3<f64>, center: &Vector3<f64>, up: &Vector3<f64>) -> Matrix<f64, 4, 4> {
     let n = (eye - center).normalize();
-    let l = up.to_float().cross(&n).normalize();
+    let l = up.cross(&n).normalize();
     let m = n.cross(&l).normalize();
     let transformation_matrix = Matrix::new([
         Vector::new([l.x(), l.y(), l.z(), 0.0]),
@@ -42,9 +41,9 @@ fn look_at(eye: &Vector3<i32>, center: &Vector3<i32>, up: &Vector3<i32>) -> Matr
         Vector::new([0.0, 0.0, 0.0, 1.0]),
     ]);
     let translation_matrix = Matrix::new([
-        Vector::new([1.0, 0.0, 0.0, -center_float.x()]),
-        Vector::new([0.0, 1.0, 0.0, -center_float.y()]),
-        Vector::new([0.0, 0.0, 1.0, -center_float.z()]),
+        Vector::new([1.0, 0.0, 0.0, -center.x()]),
+        Vector::new([0.0, 1.0, 0.0, -center.y()]),
+        Vector::new([0.0, 0.0, 1.0, -center.z()]),
         Vector::new([0.0, 0.0, 0.0, 1.0]),
     ]);
 

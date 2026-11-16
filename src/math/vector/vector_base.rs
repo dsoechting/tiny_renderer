@@ -122,20 +122,6 @@ where
 
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Integer + Display + Sum + Copy + ToPrimitive,
-{
-    pub fn to_float(&self) -> Vector<f64, N> {
-        let arr: [f64; N] = array::from_fn(|i| {
-            // TODO: fix unwrap
-            let curr_data: f64 = self.data[i].to_f64().unwrap();
-            curr_data
-        });
-        Vector::new(arr)
-    }
-}
-
-impl<T, const N: usize> Vector<T, N>
-where
     T: Display + Sum + Copy + ToPrimitive + Num,
 {
     pub fn magnitude(&self) -> f64 {
@@ -295,6 +281,7 @@ mod test {
         let res = vec_one.dot(&vec_two);
         assert_eq!(res, 32.);
     }
+
     #[test]
     fn vec_3_int_magnitude() {
         let input = Vector::new([1, 2, 3]);
