@@ -5,7 +5,7 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use num::{Num, ToPrimitive};
+use num::Num;
 
 use crate::math::Vector3;
 

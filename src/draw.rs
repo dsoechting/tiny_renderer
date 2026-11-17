@@ -1,6 +1,7 @@
 use core::f64;
 use std::ops::Mul;
 
+use crate::utils::write_to_buffers::write_to_buffers;
 #[cfg(debug_assertions)]
 use crate::{
     math::{Matrix, Vector, Vector3},
@@ -177,11 +178,7 @@ pub fn rasterize_triangle<T: ColorSpace + Copy>(
 
             // Filter out negative values, they're off screen
             if let (Ok(x_unsigned), Ok(y_unsigned)) = (usize::try_from(x), usize::try_from(y)) {
-                // Direct index feels risky, but it should be safe.
-                if z > z_buffer[x_unsigned][y_unsigned] {
-                    z_buffer[x_unsigned][y_unsigned] = z;
-                    img.set_pixel(x_unsigned, y_unsigned, color)?;
-                }
+                write_to_buffers(z_buffer, img, x_unsigned, y_unsigned, z, color)?;
             }
         }
     }
