@@ -136,6 +136,7 @@ pub fn rasterize_triangle<T: ColorSpace + Copy>(
         .x()
         .max(triangle.vector_b.x())
         .max(triangle.vector_c.x())
+        .max(img.width as f64)
         .ceil() as i32;
     let bb_min_y = triangle
         .vector_a
@@ -148,6 +149,7 @@ pub fn rasterize_triangle<T: ColorSpace + Copy>(
         .y()
         .max(triangle.vector_b.y())
         .max(triangle.vector_c.y())
+        .max(img.height as f64)
         .ceil() as i32;
 
     let total_area = triangle.area();
