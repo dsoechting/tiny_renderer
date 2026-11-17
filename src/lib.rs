@@ -5,3 +5,4 @@ pub mod obj;
 pub mod tga;
 pub mod triangle;
 pub mod types;
+pub mod utils;

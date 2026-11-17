@@ -1,3 +1,4 @@
+use core::f64;
 use std::{
     array::{self},
     fmt::{Debug, Display},
@@ -29,6 +30,13 @@ where
 {
     pub fn new(data: [Vector<T, C>; R]) -> Matrix<T, R, C> {
         Matrix { data }
+    }
+    pub fn from_arrays(data: [[T; C]; R]) -> Matrix<T, R, C> {
+        let vectors: [Vector<T, C>; R] = array::from_fn(|i| {
+            let vector_data: [T; C] = array::from_fn(|j| data[i][j]);
+            Vector::new(vector_data)
+        });
+        Matrix::new(vectors)
     }
     fn rows(&self) -> &[Vector<T, C>; R] {
         &self.data
@@ -64,13 +72,19 @@ where
     T: Integer + Display + Sum + Copy + ToPrimitive,
 {
     pub fn invert(&self) -> Option<Matrix<f64, N, N>> {
-        let rows = self.rows();
-        let vectors = array::from_fn(|i| {
-            // TODO: Fix unwrap
-            let vector_data: [f64; N] = array::from_fn(|j| rows[i][j].to_f64().unwrap());
-            Vector::new(vector_data)
-        });
-        let float_matrix = Matrix::new(vectors);
+        let mut matrix = [[0.0_f64; N]; N];
+
+        for (i, row) in self.rows().iter().enumerate() {
+            for (j, val) in row.get_data().iter().enumerate() {
+                let opt_f64_val = val.to_f64();
+                match opt_f64_val {
+                    Some(f64_val) => matrix[i][j] = f64_val,
+                    None => return None,
+                }
+            }
+        }
+
+        let float_matrix = Matrix::from_arrays(matrix);
         float_matrix.invert()
     }
 }
@@ -83,15 +97,7 @@ impl<const N: usize> Matrix<f64, N, N> {
     }
 }
 
-// Impl block for inversion
-// Only square matricies with floats can be inverted
-// Maybe I can create another impl block
 impl<const N: usize> Invert for Matrix<f64, N, N> {
-    // fn identity() -> Self {
-    //     Self::new(array::from_fn(|i| {
-    //         Vector::new(array::from_fn(|j| if i == j { 1. } else { 0. }))
-    //     }))
-    // }
     type Output = Matrix<f64, N, N>;
     fn invert(&self) -> Option<Self> {
         let left = self.clone();
@@ -174,6 +180,19 @@ where
     }
 }
 
+// Impl Mul for Vector
+impl<T, const R: usize, const C: usize> Mul<&Vector<T, C>> for &Matrix<T, R, C>
+where
+    T: Num + Sum + PartialEq + Display + Copy,
+{
+    type Output = Vector<T, R>;
+    fn mul(self, input_vector: &Vector<T, C>) -> Vector<T, R> {
+        let self_cols = self.rows();
+        let data: [T; R] = array::from_fn(|i| self_cols[i].dot(input_vector));
+        Vector::new(data)
+    }
+}
+
 impl<T, const R: usize, const C: usize> Index<usize> for Matrix<T, R, C>
 where
     T: Num + Sum + Copy + Display,
@@ -251,6 +270,22 @@ mod test {
     }
 
     #[test]
+    fn matrix_mult_test_by_vector() {
+        let expected = Vector::new([80, 140, 200]);
+
+        let vec_one = Vector::new([2, 3]);
+        let vec_two = Vector::new([4, 5]);
+        let vec_three = Vector::new([6, 7]);
+        let matrix = Matrix::new([vec_one, vec_two, vec_three]);
+
+        let vec_four = Vector::new([10, 20]);
+
+        let result = matrix.mul(&vec_four);
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
     fn matrix_transpose_test() {
         let vec_expected_one = Vector::new([1, 4]);
         let vec_expected_two = Vector::new([2, 5]);
@@ -269,7 +304,7 @@ mod test {
     fn matrix_inverse_test() {
         let vec_expected_one = Vector::new([-2., 3.]);
         let vec_expected_two = Vector::new([3., -4.]);
-        let expected = Matrix::new([vec_expected_one, vec_expected_two]);
+        let expected = Some(Matrix::new([vec_expected_one, vec_expected_two]));
 
         let vec_input_one = Vector::new([4., 3.]);
         let vec_input_two = Vector::new([3., 2.]);
@@ -281,7 +316,7 @@ mod test {
         let identity: Matrix<f64, 2, 2> = Matrix::identity();
         assert_eq!(expected_identity, identity);
 
-        let result = input.invert().unwrap();
+        let result = input.invert();
 
         assert_eq!(expected, result);
     }
@@ -291,14 +326,18 @@ mod test {
         let vec_expected_one = Vector::new([3., -1., 1.]);
         let vec_expected_two = Vector::new([-15., 6., -5.]);
         let vec_expected_three = Vector::new([5., -2., 2.]);
-        let expected = Matrix::new([vec_expected_one, vec_expected_two, vec_expected_three]);
+        let expected = Some(Matrix::new([
+            vec_expected_one,
+            vec_expected_two,
+            vec_expected_three,
+        ]));
 
         let vec_input_one = Vector::new([2., 0., -1.]);
         let vec_input_two = Vector::new([5., 1., 0.]);
         let vec_input_three = Vector::new([0., 1., 3.]);
         let input = Matrix::new([vec_input_one, vec_input_two, vec_input_three]);
 
-        let result = input.invert().unwrap();
+        let result = input.invert();
 
         assert_eq!(expected, result);
     }
@@ -308,14 +347,18 @@ mod test {
         let vec_expected_one = Vector::new([3., -1., 1.]);
         let vec_expected_two = Vector::new([-15., 6., -5.]);
         let vec_expected_three = Vector::new([5., -2., 2.]);
-        let expected = Matrix::new([vec_expected_one, vec_expected_two, vec_expected_three]);
+        let expected = Some(Matrix::new([
+            vec_expected_one,
+            vec_expected_two,
+            vec_expected_three,
+        ]));
 
         let vec_input_one = Vector::new([2, 0, -1]);
         let vec_input_two = Vector::new([5, 1, 0]);
         let vec_input_three = Vector::new([0, 1, 3]);
         let input = Matrix::new([vec_input_one, vec_input_two, vec_input_three]);
 
-        let result = input.invert().unwrap();
+        let result = input.invert();
 
         assert_eq!(expected, result);
     }
@@ -325,14 +368,18 @@ mod test {
         let vec_expected_one = Vector::new([-15. / 16., 1. / 4., 3. / 16.]);
         let vec_expected_two = Vector::new([3. / 8., -1. / 2., 1. / 8.]);
         let vec_expected_three = Vector::new([5. / 16., 1. / 4., -1. / 16.]);
-        let expected = Matrix::new([vec_expected_one, vec_expected_two, vec_expected_three]);
+        let expected = Some(Matrix::new([
+            vec_expected_one,
+            vec_expected_two,
+            vec_expected_three,
+        ]));
 
         let vec_input_one = Vector::new([0., 1., 2.]);
         let vec_input_two = Vector::new([1., 0., 3.]);
         let vec_input_three = Vector::new([4., 5., 6.]);
         let input = Matrix::new([vec_input_one, vec_input_two, vec_input_three]);
 
-        let result = input.invert().unwrap();
+        let result = input.invert();
 
         assert_eq!(expected, result);
     }

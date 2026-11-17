@@ -1,7 +1,7 @@
 use std::{path::Path, time::Instant};
 
 use tiny_renderer::{
-    draw::draw_obj_file,
+    draw::draw_mesh,
     obj::parse_obj_file,
     tga::{Image, RGB},
 };
@@ -25,8 +25,8 @@ fn test_obj_files() {
 
     let mut img = Image::<RGB>::new(width, height);
 
-    if let Ok(model) = parse_obj_file(path) {
-        let draw_res = draw_obj_file(model, &mut img);
+    if let Ok(mesh) = parse_obj_file(path) {
+        let draw_res = draw_mesh(mesh, &mut img);
 
         match draw_res {
             Ok(_) => {

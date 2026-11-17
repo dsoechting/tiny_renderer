@@ -5,9 +5,9 @@ use std::{
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
 };
 
-use num::{Num, ToPrimitive};
+use num::Num;
 
-use crate::math::{Matrix, Vector3};
+use crate::math::Vector3;
 
 #[derive(Debug, Clone)]
 pub struct Vector<T, const N: usize>
@@ -38,33 +38,15 @@ where
 impl Vector<f64, 4> {
     pub fn perspective_divide(&self) -> Vector<f64, 4> {
         let raw_data = self.data;
-        let x = raw_data.first().unwrap();
-        let y = raw_data.get(1).unwrap();
-        let z = raw_data.get(2).unwrap();
-        let w = raw_data.get(3).unwrap();
-        Vector::new([x.div(*w), y.div(*w), z.div(*w), 1.0])
+        let w = raw_data[3];
+        let data: [f64; 4] = array::from_fn(|i| raw_data[i].div(w));
+        Vector::new(data)
     }
 
-    pub fn drop_w(&self) -> Vector3<f64> {
+    pub fn to_cartesian(&self) -> Vector3<f64> {
         let raw_data = self.data;
-        let x = *raw_data.first().unwrap();
-        let y = *raw_data.get(1).unwrap();
-        let z = *raw_data.get(2).unwrap();
-        Vector3::new([x, y, z])
-    }
-
-    pub fn to_matrix(&self) -> Matrix<f64, 4, 1> {
-        let raw_data = self.data;
-        let x = raw_data.first().unwrap();
-        let y = raw_data.get(1).unwrap();
-        let z = raw_data.get(2).unwrap();
-        let w = raw_data.get(3).unwrap();
-        Matrix::new([
-            Vector::new([*x]),
-            Vector::new([*y]),
-            Vector::new([*z]),
-            Vector::new([*w]),
-        ])
+        let data: [f64; 3] = array::from_fn(|i| raw_data[i]);
+        Vector3::new(data)
     }
 }
 
@@ -112,29 +94,24 @@ where
     type Output = Vector<T, N>;
     fn div(self, rhs: T) -> Self::Output {
         Vector {
-            data: self.data.map(|element| {
-                // dbg!(element, rhs, element / rhs);
-                element / rhs
-            }),
+            data: self.data.map(|element| element / rhs),
         }
     }
 }
 
 impl<T, const N: usize> Vector<T, N>
 where
-    T: Display + Sum + Copy + ToPrimitive + Num,
+    T: Display + Sum + Copy + Into<f64> + Num,
 {
     pub fn magnitude(&self) -> f64 {
-        // TODO: fix unwrap
-        let dot_with_self: f64 = self.dot(self).to_f64().unwrap();
+        let dot_with_self: f64 = self.dot(self).into();
         dot_with_self.sqrt()
     }
 
     pub fn normalize(&self) -> Vector<f64, N> {
         let magnitude = self.magnitude();
         let arr: [f64; N] = array::from_fn(|i| {
-            // TODO: fix unwrap
-            let curr_data: f64 = self.data[i].to_f64().unwrap();
+            let curr_data: f64 = self.data[i].into();
             curr_data / magnitude
         });
         Vector::new(arr)
@@ -215,7 +192,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use num::{Float, integer::Roots};
+    use num::Float;
 
     use crate::math::Vector;
 

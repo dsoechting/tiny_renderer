@@ -3,7 +3,6 @@ use anyhow::Result;
 use anyhow::anyhow;
 use rand::Rng;
 use std::io::{BufWriter, prelude::*};
-use std::u8;
 use std::{fs::File, io};
 
 use rand::rng;
