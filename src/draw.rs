@@ -84,22 +84,20 @@ pub fn draw_mesh<T: ColorSpace + Copy>(mesh: Mesh, img: &mut Image<T>) -> Result
             //Convert our vertex to a 4D point for homogenous coordinates
             let vertex_one_homogeneous =
                 Vector::new([vertex_one.x(), vertex_one.y(), vertex_one.z(), 1.0]);
-
             let vertex_two_homogenous =
                 Vector::new([vertex_two.x(), vertex_two.y(), vertex_two.z(), 1.0]);
-
             let vertex_three_homogenous =
                 Vector::new([vertex_three.x(), vertex_three.y(), vertex_three.z(), 1.0]);
 
             let vertex_one_transposed = viewport_matrix
                 .mul(&(&composed_transformation * &vertex_one_homogeneous).perspective_divide())
-                .drop_w();
+                .to_cartesian();
             let vertex_two_transposed = viewport_matrix
                 .mul(&(&composed_transformation * &vertex_two_homogenous).perspective_divide())
-                .drop_w();
+                .to_cartesian();
             let vertex_three_transposed = viewport_matrix
                 .mul(&(&composed_transformation * &vertex_three_homogenous).perspective_divide())
-                .drop_w();
+                .to_cartesian();
 
             // We lose the Z value here
             let triangle = Triangle {

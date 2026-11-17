@@ -97,15 +97,7 @@ impl<const N: usize> Matrix<f64, N, N> {
     }
 }
 
-// Impl block for inversion
-// Only square matricies with floats can be inverted
-// Maybe I can create another impl block
 impl<const N: usize> Invert for Matrix<f64, N, N> {
-    // fn identity() -> Self {
-    //     Self::new(array::from_fn(|i| {
-    //         Vector::new(array::from_fn(|j| if i == j { 1. } else { 0. }))
-    //     }))
-    // }
     type Output = Matrix<f64, N, N>;
     fn invert(&self) -> Option<Self> {
         let left = self.clone();

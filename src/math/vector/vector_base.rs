@@ -43,7 +43,7 @@ impl Vector<f64, 4> {
         Vector::new(data)
     }
 
-    pub fn drop_w(&self) -> Vector3<f64> {
+    pub fn to_cartesian(&self) -> Vector3<f64> {
         let raw_data = self.data;
         let data: [f64; 3] = array::from_fn(|i| raw_data[i]);
         Vector3::new(data)
