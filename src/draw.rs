@@ -2,7 +2,6 @@ use core::f64;
 use std::ops::Mul;
 
 use crate::utils::write_to_buffers::write_to_buffers;
-#[cfg(debug_assertions)]
 use crate::{
     math::{Matrix, Vector, Vector3},
     tga::{ColorSpace, Image},

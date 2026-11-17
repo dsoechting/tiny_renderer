@@ -1,4 +1,3 @@
-#[cfg(debug_assertions)]
 pub fn draw_z_buffer(z_buff: &[Vec<f64>], width: usize, height: usize) {
     use crate::tga::{Grayscale, Image};
 
